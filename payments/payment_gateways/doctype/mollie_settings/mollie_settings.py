@@ -74,7 +74,7 @@ class MollieSettings(Document):
 			)
 
 	def get_payment_url(self, **kwargs):
-		return return get_url(self.finalize_request(charge.checkout_url))
+		return get_url(charge.checkout_url)
 
 	def create_request(self, data):
 		import mollie
