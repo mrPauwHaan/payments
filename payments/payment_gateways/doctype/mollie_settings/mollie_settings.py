@@ -72,7 +72,7 @@ class MollieSettings(Document):
 			)
 
 	def get_payment_url(self, **kwargs):
-		return get_url(f"./mollie_checkout?{urlencode(kwargs)}")
+		return get_url(f"https://api.mollie.com/v2/payment-links/?{urlencode(kwargs)}")
 
 	def create_request(self, data):
 		import mollie
