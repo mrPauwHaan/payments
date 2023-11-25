@@ -6,6 +6,8 @@ from frappe.integrations.utils import create_request_log, make_get_request
 from frappe.model.document import Document
 from frappe.utils import call_hook_method, cint, flt, get_url
 from payments.utils import create_payment_gateway
+from mollie.api.client import Client
+from mollie.api.error import Error
 
 
 class MollieSettings(Document):
@@ -72,7 +74,7 @@ class MollieSettings(Document):
 			)
 
 	def get_payment_url(self, **kwargs):
-		return get_url(charge.checkout_url)
+		return return get_url(self.finalize_request(charge.checkout_url))
 
 	def create_request(self, data):
 		import mollie
