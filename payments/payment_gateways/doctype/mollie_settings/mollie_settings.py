@@ -7,7 +7,6 @@ from frappe.model.document import Document
 from frappe.utils import call_hook_method, cint, flt, get_url
 from payments.utils import create_payment_gateway
 from mollie.api.client import Client
-from mollie.api.error import Error
 
 
 class MollieSettings(Document):
@@ -77,11 +76,10 @@ class MollieSettings(Document):
 		return get_url(charge.checkout_url)
 
 	def create_request(self, data):
-		import mollie
-
 		self.data = frappe._dict(data)
-		mollie.api_key = self.get_password(fieldname="secret_key", raise_exception=False)
-		mollie.default_http_client = mollie.http_client.RequestsClient()
+		mollie_client = Client()
+		mollie_client.set_api_key = self.get_password(fieldname="secret_key", raise_exception=False)
+		mollie_client.default_http_client = mollie_client.http_client.RequestsClient()
 
 		try:
 			self.integration_request = create_request_log(self.data, service_name="Mollie")
@@ -100,14 +98,12 @@ class MollieSettings(Document):
 			}
 
 	def create_charge_on_mollie(self):
-		from mollie.api.client import Client
-
 		try:
 			charge = mollie_client.payments.create({
 				"amount": {
 					"currency": self.data.currency,
-        			"value": cint(flt(self.data.amount) * 100),
-    			},
+        				"value": cint(flt(self.data.amount) * 100),
+    				},
 				"description": self.data.description,
 				"billingEmail": self.data.payer_email,
 			})
