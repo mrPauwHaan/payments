@@ -54,10 +54,7 @@ class MollieSettings(Document):
 
 	def validate_mollie_credentials(self):
 		if self.publishable_key and self.secret_key:
-			header = {
-				"Authorization": "Bearer {}".format(
-					self.get_password(fieldname="secret_key", raise_exception=False)
-				)
+			header = self.get_password(fieldname="secret_key", raise_exception=False)
 			}
 			try:
 				make_get_request(url="https://api.mollie.com/v2/payments", headers=header)
@@ -78,8 +75,7 @@ class MollieSettings(Document):
 	def create_request(self, data):
 		self.data = frappe._dict(data)
 		mollie_client = Client()
-		mollie_client.set_api_key = self.get_password(fieldname="secret_key", raise_exception=False)
-		mollie_client.default_http_client = mollie_client.http_client.RequestsClient()
+		api = mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
 
 		try:
 			self.integration_request = create_request_log(self.data, service_name="Mollie")
