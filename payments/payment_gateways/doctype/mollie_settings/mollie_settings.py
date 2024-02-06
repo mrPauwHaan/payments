@@ -54,7 +54,10 @@ class MollieSettings(Document):
 
 	def validate_mollie_credentials(self):
 		if self.publishable_key and self.secret_key:
-			header = self.get_password(fieldname="secret_key", raise_exception=False)
+			header = {
+				"Authorization": "Bearer {}".format(
+					self.get_password(fieldname="secret_key", raise_exception=False)
+				)
 			}
 			try:
 				make_get_request(url="https://api.mollie.com/v2/payments", headers=header)
