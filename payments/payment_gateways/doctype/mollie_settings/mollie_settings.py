@@ -95,14 +95,13 @@ class MollieSettings(Document):
 
 	def create_charge_on_mollie(self):
 		try:
-			charge = mollie_client.payments.create({
-				"amount": {
-					"currency": self.data.currency,
-        				"value": cint(flt(self.data.amount) * 100),
-    				},
-				"description": self.data.description,
-				"billingEmail": self.data.payer_email,
-			})
+			charge =  = mollie_client.payments.create(
+            		{
+                		"amount": {"currency": self.data.currency, "value": cint(flt(self.data.amount) * 100)},
+                		"description": self.data.description,
+                		"billingEmail": self.data.payer_email,
+            			}
+        		)
 
 			if charge.captured == True:
 				self.integration_request.db_set("status", "Completed", update_modified=False)
