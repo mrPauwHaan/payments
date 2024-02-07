@@ -70,3 +70,19 @@ frappe.ready(function() {
 		  form.addEventListener('submit', async e => {
 	})
 });
+
+frappe.ready(function() {
+	form.addEventListener('submit', async e => {
+		  e.preventDefault();
+		
+		  var { token, error } = await mollie.createToken();
+		
+		  if (error) {
+		    // Something wrong happened while creating the token. Handle this situation gracefully.
+		    return;
+		  }
+		
+		  // Submit form to the server
+		  form.submit();
+		});
+});
