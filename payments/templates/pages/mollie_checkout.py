@@ -72,8 +72,6 @@ def get_header_image(doc, gateway_controller):
 def make_payment(mollie_token_id, data, reference_doctype=None, reference_docname=None):
 	data = json.loads(data)
 
-	data.update({"mollie_token_id": mollie_token_id})
-
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
 
 	if is_a_subscription(reference_doctype, reference_docname):
