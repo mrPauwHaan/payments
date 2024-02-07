@@ -56,12 +56,17 @@ function setOutcome(result) {
 }
 
 frappe.ready(function() {
-	$('#submit').off("click").on("click", function(e) {
+	$('#submit').off("click").on("click", function(e) {	
 		e.preventDefault();
-		var extraDetails = {
-			name: $('input[name=cardholder-name]').val(),
-			email: $('input[name=cardholder-email]').val()
-		}
-		mollie.createToken(card, extraDetails).then(setOutcome);
+		
+		var { token, error } = await mollie.createToken();
+		
+		  if (error) {
+		    // Something wrong happened while creating the token. Handle this situation gracefully.
+		    return;
+		  }
+		
+		  // Submit form to the server
+		  form.addEventListener('submit', async e => {
 	})
 });
