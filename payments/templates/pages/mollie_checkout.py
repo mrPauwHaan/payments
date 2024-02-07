@@ -32,7 +32,7 @@ def get_context(context):
 			context[key] = frappe.form_dict[key]
 
 		gateway_controller = get_gateway_controller(context.reference_doctype, context.reference_docname)
-		context.publishable_key = get_api_key(context.reference_docname, gateway_controller)
+		context.profile_id = get_api_key(context.reference_docname, gateway_controller)
 		context.image = get_header_image(context.reference_docname, gateway_controller)
 
 		context["amount"] = fmt_money(amount=context["amount"], currency=context["currency"])
@@ -55,11 +55,11 @@ def get_context(context):
 
 
 def get_api_key(doc, gateway_controller):
-	publishable_key = frappe.db.get_value("Mollie Settings", gateway_controller, "publishable_key")
+	profile_id = frappe.db.get_value("Mollie Settings", gateway_controller, "profile_id")
 	if cint(frappe.form_dict.get("use_sandbox")):
-		publishable_key = frappe.conf.sandbox_publishable_key
+		profile_id = frappe.conf.sandbox_profile_id
 
-	return publishable_key
+	return profile_id
 
 
 def get_header_image(doc, gateway_controller):
