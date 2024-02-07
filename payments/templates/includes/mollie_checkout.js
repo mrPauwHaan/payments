@@ -58,10 +58,12 @@ function setOutcome(result) {
 frappe.ready(function() {
 	form = document.getElementById("submit");
 	form.addEventListener('submit', async e => {
-	e.preventDefault();
-	console.log("Test voor mollie create token");
-  	var { result } = await mollie.createToken();
-	setOutcome(result)
-	console.log("Test daarna");
+		e.preventDefault();
+	  	var { token, error } = await mollie.createToken();
+		if (error) {
+	    		console.log(error)
+   	 	return;
+  		}
+		setOutcome(token)
 	})
 });
