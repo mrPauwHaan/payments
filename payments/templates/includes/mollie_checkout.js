@@ -1,4 +1,4 @@
-var mollie = Mollie("{{ publishable_key }}");
+var mollie = Mollie("{{ profile_id }}");
 
 var elements = mollie.elements();
 
