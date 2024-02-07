@@ -17,7 +17,7 @@ var style = {
 	}
 };
 
-var card = mollie.createComponent('card');
+var card = mollie.createComponent('cardNumber');
 card.mount('#card-element');
 
 function setOutcome(result) {
