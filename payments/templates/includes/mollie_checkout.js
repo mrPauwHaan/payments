@@ -17,7 +17,7 @@ var style = {
 	}
 };
 
-function setOutcome(result.token) {
+function setOutcome(result) {
 
 	if (result.token) {
 		$('#submit').prop('disabled', true)
