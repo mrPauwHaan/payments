@@ -58,6 +58,8 @@ function setOutcome(result) {
 frappe.ready(function() {
 	$('#submit').off("click").on("click", function(e) {
 		e.preventDefault();
+		console.log("Test voor mollie create token");
 		mollie.createToken().then(setOutcome);
+		console.log("Test daarna");
 	});
 });
