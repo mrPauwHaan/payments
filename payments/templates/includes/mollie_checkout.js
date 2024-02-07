@@ -56,6 +56,7 @@ function setOutcome(result) {
 }
 
 frappe.ready(function() {
+	form = document.getElementById("submit");
 	form.addEventListener('submit', async e => {
 	e.preventDefault();
 	console.log("Test voor mollie create token");
