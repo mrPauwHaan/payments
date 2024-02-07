@@ -58,13 +58,14 @@ function setOutcome(result) {
 	}
 }
 
-card.on('change', function(event) {
-	var displayError = document.getElementById('card-errors');
+var displayError = document.getElementById('card-errors');
+
+card.addEventListener('change', event => {
 	if (event.error) {
 		displayError.textContent = event.error.message;
-	} else {
-		displayError.textContent = '';
-	}
+  	} else {
+    		isplayError.textContent = '';
+  	}
 });
 
 frappe.ready(function() {
