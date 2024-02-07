@@ -1,7 +1,5 @@
 var mollie = Mollie("{{ profile_id }}");
 
-var elements = mollie.elements();
-
 var style = {
 	base: {
 		color: '#32325d',
@@ -19,11 +17,7 @@ var style = {
 	}
 };
 
-var card = elements.create('card', {
-	hidePostalCode: true,
-	style: style
-});
-
+var card = mollie.createComponent('card');
 card.mount('#card-element');
 
 function setOutcome(result) {
