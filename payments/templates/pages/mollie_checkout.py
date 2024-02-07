@@ -69,20 +69,15 @@ def get_header_image(doc, gateway_controller):
 
 
 @frappe.whitelist(allow_guest=True)
-def make_payment(data, reference_doctype=None, reference_docname=None):
+def make_payment(data, reference_doctype, reference_docname):
 	data = json.loads(data)
 
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
-
-	if is_a_subscription(reference_doctype, reference_docname):
-		reference = frappe.get_doc(reference_doctype, reference_docname)
-		data = reference.create_subscription("mollie", gateway_controller, data)
-	else:
-		data = frappe.get_doc("Mollie Settings", gateway_controller).create_request(data)
+	
+	data = frappe.get_doc("Mollie Settings", gateway_controller).create_request(data)
 
 	frappe.db.commit()
 	return data
-
 
 def is_a_subscription(reference_doctype, reference_docname):
 	if not frappe.get_meta(reference_doctype).has_field("is_a_subscription"):
