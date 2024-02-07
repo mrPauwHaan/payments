@@ -1,6 +1,6 @@
-var stripe = Stripe("{{ publishable_key }}");
+var mollie = Mollie("{{ publishable_key }}");
 
-var elements = stripe.elements();
+var elements = mollie.elements();
 
 var style = {
 	base: {
@@ -32,11 +32,11 @@ function setOutcome(result) {
 		$('#submit').prop('disabled', true)
 		$('#submit').html(__('Processing...'))
 		frappe.call({
-			method:"payments.templates.pages.stripe_checkout.make_payment",
+			method:"payments.templates.pages.mollie_checkout.make_payment",
 			freeze:true,
 			headers: {"X-Requested-With": "XMLHttpRequest"},
 			args: {
-				"stripe_token_id": result.token.id,
+				"mollie_token_id": result.token.id,
 				"data": JSON.stringify({{ frappe.form_dict|json }}),
 				"reference_doctype": "{{ reference_doctype }}",
 				"reference_docname": "{{ reference_docname }}"
@@ -80,6 +80,6 @@ frappe.ready(function() {
 			name: $('input[name=cardholder-name]').val(),
 			email: $('input[name=cardholder-email]').val()
 		}
-		stripe.createToken(card, extraDetails).then(setOutcome);
+		mollie.createToken(card, extraDetails).then(setOutcome);
 	})
 });
