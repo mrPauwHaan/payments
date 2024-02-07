@@ -98,6 +98,7 @@ class MollieSettings(Document):
 
 	def create_charge_on_mollie(self):
 		try:
+			mollie_client = Client()
 			charge = mollie_client.payments.create(
             		{
                 		"amount": {"currency": self.data.currency, "value": cint(flt(self.data.amount) * 100)},
