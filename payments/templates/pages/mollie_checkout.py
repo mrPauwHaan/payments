@@ -69,7 +69,7 @@ def get_header_image(doc, gateway_controller):
 
 
 @frappe.whitelist(allow_guest=True)
-def make_payment(mollie_token_id, data, reference_doctype=None, reference_docname=None):
+def make_payment(data, reference_doctype=None, reference_docname=None):
 	data = json.loads(data)
 
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
