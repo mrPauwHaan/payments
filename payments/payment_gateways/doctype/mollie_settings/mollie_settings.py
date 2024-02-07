@@ -53,7 +53,7 @@ class MollieSettings(Document):
 			self.validate_mollie_credentials()
 
 	def validate_mollie_credentials(self):
-		if self.publishable_key and self.secret_key:
+		if self.secret_key:
 			header = {
 				"Authorization": "Bearer {}".format(
 					self.get_password(fieldname="secret_key", raise_exception=False)
