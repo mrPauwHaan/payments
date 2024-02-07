@@ -98,8 +98,6 @@ class MollieSettings(Document):
 
 	def create_charge_on_mollie(self):
 		try:
-			frappe.log_error(self.data.amount)
-			frappe.log_error(cint(flt(self.data.amount)))
 			charge = mollie_client.payments.create(
             		{
                 		"amount": {"currency": self.data.currency, "value": cint(flt(self.data.amount) * 100)},
