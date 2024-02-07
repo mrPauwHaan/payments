@@ -73,24 +73,7 @@ class MollieSettings(Document):
 			)
 
 	def get_payment_url(self, **kwargs):
-		mollie_client = Client()
-		api = mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
-
-		try:
-			self.integration_request = create_request_log(self.data, service_name="Mollie")
-			return self.create_charge_on_mollie()
-
-		except Exception:
-			frappe.log_error(frappe.get_traceback())
-			return {
-				"redirect_to": frappe.redirect_to_message(
-					_("Server Error"),
-					_(
-						"It seems that there is an issue with the server's Mollie configuration. In case of failure, the amount will get refunded to your account."
-					),
-				),
-				"status": 401,
-			}
+		return get_url(f"mollie_checkout?{urlencode(kwargs)}")
 
 	def create_request(self, data):
 		self.data = frappe._dict(data)
