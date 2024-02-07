@@ -2,7 +2,7 @@ $(document).ready(function(){
 	(function(e){
 		var options = {
 			"key": "{{ api_key }}",
-			"amount": cint({{ amount }}),
+			"amount": cint({{ amount.value }}),
 			"currency": "{{ currency }}",
 			"name": "{{ title }}",
 			"description": "{{ description }}",
