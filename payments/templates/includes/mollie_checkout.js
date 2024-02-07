@@ -17,9 +17,6 @@ var style = {
 	}
 };
 
-var card = mollie.createComponent('cardNumber');
-card.mount('#card-element');
-
 function setOutcome(result) {
 
 	if (result.token) {
@@ -57,16 +54,6 @@ function setOutcome(result) {
 		$('.error').show()
 	}
 }
-
-var displayError = document.getElementById('card-errors');
-
-card.addEventListener('change', event => {
-	if (event.error) {
-		displayError.textContent = event.error.message;
-  	} else {
-    		isplayError.textContent = '';
-  	}
-});
 
 frappe.ready(function() {
 	$('#submit').off("click").on("click", function(e) {
