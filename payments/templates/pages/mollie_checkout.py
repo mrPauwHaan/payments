@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, fmt_money
 
-from payments.payment_gateways.doctype.stripe_settings.stripe_settings import (
+from payments.payment_gateways.doctype.mollie_settings.mollie_settings import (
 	get_gateway_controller,
 )
 
@@ -55,7 +55,7 @@ def get_context(context):
 
 
 def get_api_key(doc, gateway_controller):
-	publishable_key = frappe.db.get_value("Stripe Settings", gateway_controller, "publishable_key")
+	publishable_key = frappe.db.get_value("Mollie Settings", gateway_controller, "publishable_key")
 	if cint(frappe.form_dict.get("use_sandbox")):
 		publishable_key = frappe.conf.sandbox_publishable_key
 
@@ -63,24 +63,24 @@ def get_api_key(doc, gateway_controller):
 
 
 def get_header_image(doc, gateway_controller):
-	header_image = frappe.db.get_value("Stripe Settings", gateway_controller, "header_img")
+	header_image = frappe.db.get_value("Mollie Settings", gateway_controller, "header_img")
 
 	return header_image
 
 
 @frappe.whitelist(allow_guest=True)
-def make_payment(stripe_token_id, data, reference_doctype=None, reference_docname=None):
+def make_payment(mollie_token_id, data, reference_doctype=None, reference_docname=None):
 	data = json.loads(data)
 
-	data.update({"stripe_token_id": stripe_token_id})
+	data.update({"mollie_token_id": mollie_token_id})
 
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
 
 	if is_a_subscription(reference_doctype, reference_docname):
 		reference = frappe.get_doc(reference_doctype, reference_docname)
-		data = reference.create_subscription("stripe", gateway_controller, data)
+		data = reference.create_subscription("mollie", gateway_controller, data)
 	else:
-		data = frappe.get_doc("Stripe Settings", gateway_controller).create_request(data)
+		data = frappe.get_doc("Mollie Settings", gateway_controller).create_request(data)
 
 	frappe.db.commit()
 	return data
