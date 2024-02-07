@@ -1,69 +1,24 @@
-var mollie = Mollie("{{ profile_id }}");
+$(document).ready(function() {
+	var data = {{ frappe.form_dict | json }};
+	var doctype = "{{ reference_doctype }}"
+	var docname = "{{ reference_docname }}"
 
-var style = {
-	base: {
-		color: '#32325d',
-		lineHeight: '18px',
-		fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-		fontSmoothing: 'antialiased',
-		fontSize: '16px',
-		'::placeholder': {
-			color: '#aab7c4'
-		}
-	},
-	invalid: {
-		color: '#fa755a',
-		iconColor: '#fa755a'
-	}
-};
-
-function setOutcome(result) {
-
-	if (result.token) {
-		$('#submit').prop('disabled', true)
-		$('#submit').html(__('Processing...'))
-		frappe.call({
-			method:"payments.templates.pages.mollie_checkout.make_payment",
-			freeze:true,
-			headers: {"X-Requested-With": "XMLHttpRequest"},
-			args: {
-				"mollie_token_id": result.token.id,
-				"data": JSON.stringify({{ frappe.form_dict|json }}),
-				"reference_doctype": "{{ reference_doctype }}",
-				"reference_docname": "{{ reference_docname }}"
-			},
-			callback: function(r) {
-				if (r.message.status == "Completed") {
-					$('#submit').hide()
-					$('.success').show()
-					setTimeout(function() {
-						window.location.href = r.message.redirect_to
-					}, 2000);
-				} else {
-					$('#submit').hide()
-					$('.error').show()
-					setTimeout(function() {
-						window.location.href = r.message.redirect_to
-					}, 2000);
-				}
+	frappe.call({
+		method: "payments.templates.pages.mollie_checkout.check_mandate",
+		freeze: true,
+		headers: {
+			"X-Requested-With": "XMLHttpRequest"
+		},
+		args: {
+			"data": JSON.stringify(data),
+			"reference_doctype": doctype,
+			"reference_docname": docname
+		},
+		callback: function(r) {
+			if (r.message) {
+				window.location.href = r.message.redirect_to
 			}
-		});
-
-	} else if (result.error) {
-		$('.error').html(result.error.message);
-		$('.error').show()
-	}
-}
-
-frappe.ready(function() {
-	addEventListener('submit', async e => {
-		e.preventDefault();
-	  	var { token, error } = await mollie.createToken();
-		if (error) {
-	    		console.log(error)
-   	 	return;
-  		}
-		console.log(token)
-		setOutcome(token)
+		}
 	})
-});
+
+})
