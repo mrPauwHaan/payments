@@ -8,6 +8,7 @@ from frappe.utils import call_hook_method, cint, flt, get_url
 from payments.utils import create_payment_gateway
 from mollie.api.client import Client
 
+mollie_client = Client()
 
 class MollieSettings(Document):
 	supported_currencies = [
@@ -77,7 +78,6 @@ class MollieSettings(Document):
 
 	def create_request(self, data):
 		self.data = frappe._dict(data)
-		mollie_client = Client()
 		api = mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
 
 		try:
@@ -96,7 +96,7 @@ class MollieSettings(Document):
 				"status": 401,
 			}
 
-	def create_charge_on_mollie(self, api, mollie_client):
+	def create_charge_on_mollie(self):
 		try:
 			charge = mollie_client.payments.create(
             		{
