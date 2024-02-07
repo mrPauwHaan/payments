@@ -56,8 +56,7 @@ function setOutcome(result) {
 }
 
 frappe.ready(function() {
-	form = document.getElementById("submit");
-	form.addEventListener('submit', async e => {
+	addEventListener('submit', async e => {
 		e.preventDefault();
 	  	var { token, error } = await mollie.createToken();
 		console.log(token)
@@ -66,6 +65,6 @@ frappe.ready(function() {
 	    		console.log(error)
    	 	return;
   		}
-		
+		setOutcome(token)
 	})
 });
