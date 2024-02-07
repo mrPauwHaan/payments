@@ -59,12 +59,11 @@ frappe.ready(function() {
 	addEventListener('submit', async e => {
 		e.preventDefault();
 	  	var { token, error } = await mollie.createToken();
-		console.log(token)
-		console.log(error)
 		if (error) {
 	    		console.log(error)
    	 	return;
   		}
+		console.log(token)
 		setOutcome(token)
 	})
 });
