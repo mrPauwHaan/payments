@@ -61,5 +61,5 @@ frappe.ready(function() {
 		console.log("Test voor mollie create token");
 		mollie.createToken().then(setOutcome);
 		console.log("Test daarna");
-	});
+	})
 });
