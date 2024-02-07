@@ -1,53 +1,69 @@
-$(document).ready(function(){
-	(function(e){
-		var options = {
-			"key": "{{ api_key }}",
-			"amount": cint({{ amount.value }}),
-			"currency": "{{ currency }}",
-			"name": "{{ title }}",
-			"description": "{{ description }}",
-			"subscription_id": "{{ subscription_id }}",
-			"handler": function (response){
-				mollie.make_payment_log(response, options, "{{ reference_doctype }}", "{{ reference_docname }}", "{{ token }}");
-			},
-			"prefill": {
-				"name": "{{ payer_name }}",
-				"email": "{{ payer_email }}",
-				"order_id": "{{ order_id }}"
-			},
-			"notes": {{ frappe.form_dict|json }}
-		};
+var mollie = Mollie("{{ profile_id }}");
 
-		var rzp = new Mollie(options);
-		rzp.open();
-		//	e.preventDefault();
-	})();
-})
-
-frappe.provide('mollie');
-
-mollie.make_payment_log = function(response, options, doctype, docname, token){
-	$('.mollie-loading').addClass('hidden');
-	$('.mollie-confirming').removeClass('hidden');
-
-	frappe.call({
-		method:"payments.templates.pages.mollie_checkout.make_payment",
-		freeze:true,
-		headers: {"X-Requested-With": "XMLHttpRequest"},
-		args: {
-			"mollie_payment_id": response.mollie_payment_id,
-			"options": options,
-			"reference_doctype": doctype,
-			"reference_docname": docname,
-			"token": token
-		},
-		callback: function(r){
-			if (r.message && r.message.status == 200) {
-				window.location.href = r.message.redirect_to
-			}
-			else if (r.message && ([401,400,500].indexOf(r.message.status) > -1)) {
-				window.location.href = r.message.redirect_to
-			}
+var style = {
+	base: {
+		color: '#32325d',
+		lineHeight: '18px',
+		fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+		fontSmoothing: 'antialiased',
+		fontSize: '16px',
+		'::placeholder': {
+			color: '#aab7c4'
 		}
-	})
+	},
+	invalid: {
+		color: '#fa755a',
+		iconColor: '#fa755a'
+	}
+};
+
+function setOutcome(result) {
+
+	if (result.token) {
+		$('#submit').prop('disabled', true)
+		$('#submit').html(__('Processing...'))
+		frappe.call({
+			method:"payments.templates.pages.mollie_checkout.make_payment",
+			freeze:true,
+			headers: {"X-Requested-With": "XMLHttpRequest"},
+			args: {
+				"mollie_token_id": result.token.id,
+				"data": JSON.stringify({{ frappe.form_dict|json }}),
+				"reference_doctype": "{{ reference_doctype }}",
+				"reference_docname": "{{ reference_docname }}"
+			},
+			callback: function(r) {
+				if (r.message.status == "Completed") {
+					$('#submit').hide()
+					$('.success').show()
+					setTimeout(function() {
+						window.location.href = r.message.redirect_to
+					}, 2000);
+				} else {
+					$('#submit').hide()
+					$('.error').show()
+					setTimeout(function() {
+						window.location.href = r.message.redirect_to
+					}, 2000);
+				}
+			}
+		});
+
+	} else if (result.error) {
+		$('.error').html(result.error.message);
+		$('.error').show()
+	}
 }
+
+frappe.ready(function() {
+	addEventListener('submit', async e => {
+		e.preventDefault();
+	  	var { token, error } = await mollie.createToken();
+		if (error) {
+	    		console.log(error)
+   	 	return;
+  		}
+		console.log(token)
+		setOutcome(token)
+	})
+});
