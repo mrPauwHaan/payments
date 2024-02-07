@@ -59,7 +59,7 @@ frappe.ready(function() {
 	$('#submit').off("click").on("click", function(e) {	
 		e.preventDefault();
 		
-		var { token, error } = await mollie.createToken();
+		mollie.createToken();
 		
 		  if (error) {
 		    // Something wrong happened while creating the token. Handle this situation gracefully.
