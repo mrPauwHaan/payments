@@ -56,17 +56,8 @@ function setOutcome(result) {
 }
 
 frappe.ready(function() {
-	form.addEventListener('submit', async e => {
-		  e.preventDefault();
-		
-		  var { token, error } = await mollie.createToken();
-		
-		  if (error) {
-		    // Something wrong happened while creating the token. Handle this situation gracefully.
-		    return;
-		  }
-		
-		  // Submit form to the server
-		  form.submit();
-		});
+	$('#submit').off("click").on("click", function(e) {
+		e.preventDefault();
+		mollie.createToken();
+	});
 });
