@@ -1,4 +1,4 @@
-.StripeElement {
+.MollieElement {
   background-color: white;
   height: 40px;
   padding: 10px 12px;
@@ -9,23 +9,23 @@
   transition: box-shadow 150ms ease;
 }
 
-.StripeElement--focus {
+.MollieElement--focus {
   box-shadow: 0 1px 3px 0 #cfd7df;
 }
 
-.StripeElement--invalid {
+.MollieElement--invalid {
   border-color: #fa755a;
 }
 
-.StripeElement--webkit-autofill {
+.MollieElement--webkit-autofill {
   background-color: #fefde5;
 }
 
-.stripe #payment-form {
+.mollie #payment-form {
 	margin-top: 80px;
 }
 
-.stripe button {
+.mollie button {
   float: right;
   display: block;
   background: #5e64ff;
@@ -42,27 +42,27 @@
   outline: none;
 }
 
-.stripe button:hover, .stripe button:focus {
+.mollie button:hover, .mollie button:focus {
   background: #2b33ff;
   border-color: #0711ff;
 }
 
-.stripe button:active {
+.mollie button:active {
   background: #5e64ff;
 }
 
-.stripe button:disabled {
+.mollie button:disabled {
   background: #515e80;
 }
 
-.stripe .group {
+.mollie .group {
   background: white;
   box-shadow: 2px 7px 14px 2px rgba(49, 49, 93, 0.10), 0 3px 6px 0 rgba(0, 0, 0, 0.08);
   border-radius: 4px;
   margin-bottom: 20px;
 }
 
-.stripe label {
+.mollie label {
   position: relative;
   color: #8898AA;
   font-weight: 300;
@@ -72,11 +72,11 @@
   display: block;
 }
 
-.stripe .group label:not(:last-child) {
+.mollie .group label:not(:last-child) {
   border-bottom: 1px solid #F0F5FA;
 }
 
-.stripe label>span {
+.mollie label>span {
   width: 20%;
   text-align: right;
   float: left;
