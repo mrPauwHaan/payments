@@ -25,7 +25,7 @@ $(document).ready(function() {
 				$('#submit').hide()
 				$('.error').show()
 				setTimeout(function() {
-					window.location.href = r.message.redirect_to
+					frappe.log_error("Not paid")
 				}, 2000);
 			}
 		}
