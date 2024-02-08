@@ -26,7 +26,6 @@ $(document).ready(function() {
 			if (r.message.paymentUrl) {
 					$('#submit').hide()
 					setTimeout(function() {
-						window.location.href = r.message.redirect_to
 						window.open(r.message.paymentUrl, "_blank");
 					}, 2000);
 				} else {
