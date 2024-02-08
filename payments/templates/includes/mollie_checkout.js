@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).addEventListener('submit', e => {
 	var data = {{ frappe.form_dict | json }};
 	var doctype = "{{ reference_doctype }}"
 	var docname = "{{ reference_docname }}"
