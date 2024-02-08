@@ -32,10 +32,7 @@
 				</div>
 			</div>
 			<button type="submit" class="submit" id="submit">{{_('Pay')}} {{amount}}</button>
-			<div class="outcome text-center">
-				<div class="error" hidden>{{ _("An error occured during the payment process. Please contact us.") }}</div>
-				<div class="success" hidden>{{ _("Your payment has been successfully registered.") }}</div>
-			</div>
+			<button type="submit" class="processing" id="processing" disabled>{{_('Processing...')}}</button>
 		</form>
 	</div>
 </div>
