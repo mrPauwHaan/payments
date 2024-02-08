@@ -79,6 +79,6 @@ def check_payment(data, paymentID, reference_doctype, reference_docname):
 	data = json.loads(data)
 
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
-	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request2(data)
+	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request2(data, paymentID)
 	frappe.db.commit()
 	return status
