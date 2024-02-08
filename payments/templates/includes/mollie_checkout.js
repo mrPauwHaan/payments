@@ -15,13 +15,14 @@ $(document).ready(function() {
 			"reference_docname": docname
 		},
 		callback: function(r){
+			payment = r.message
 		}
 		
 	})
 
 	form.addEventListener('submit', e => {
 		e.preventDefault();
-		if (r.message.status == "Completed") {
+		if (payment.status == "Completed") {
 					$('#submit').hide()
 					$('#processing').hide()
 					setTimeout(function() {
@@ -29,11 +30,11 @@ $(document).ready(function() {
 					}, 2000);
 				} else {
 			}
-			if (r.message.paymentUrl) {
+			if (payment.paymentUrl) {
 					$('#submit').hide()
 					$('#processing').css('visibility','visible');
 					setTimeout(function() {
-						window.open(r.message.paymentUrl, "_blank");
+						window.open(payment.paymentUrl, "_blank");
 					}, 1000);
 				} else {
 			}
