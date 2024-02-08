@@ -88,5 +88,5 @@ def check_payment(paymentID):
 		else:
 			return "Cancelled"
 
-	except Error as err:
+	except:
         	return f"API call failed"
