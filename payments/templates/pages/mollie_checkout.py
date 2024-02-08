@@ -37,6 +37,7 @@ def get_context(context):
 
 		context["amount"] = fmt_money(amount=context["amount"], currency=context["currency"])
 
+	else:
 		frappe.redirect_to_message(
 			_("Some information is missing"),
 			_("Looks like someone sent you to an incomplete URL. Please ask them to look into it."),
