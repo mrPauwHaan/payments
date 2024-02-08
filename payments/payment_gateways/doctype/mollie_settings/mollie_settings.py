@@ -109,7 +109,7 @@ class MollieSettings(Document):
             			}
         		)
 
-			if charge.captured == True:
+			if charge.is_paid()::
 				self.integration_request.db_set("status", "Completed", update_modified=False)
 				self.flags.status_changed_to = "Completed"
 
