@@ -98,7 +98,9 @@ class MollieSettings(Document):
 
 	def create_charge_on_mollie(self):
 		try:
-			redirectUrl = self.finalize_request()
+			url = self.finalize_request()
+			redirectUrl = url.redirect_to
+
 			charge = mollie_client.payments.create(
             		{
 				'amount': {
