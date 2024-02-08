@@ -21,13 +21,7 @@ $(document).ready(function() {
 				setTimeout(function() {
 					window.location.href = r.message.redirect_to
 				}, 2000);
-			} else {
-				$('#submit').hide()
-				$('.error').show()
-				setTimeout(function() {
-					frappe.log_error("Not paid")
-				}, 2000);
-			}
+			} 
 		}
 	})
 
