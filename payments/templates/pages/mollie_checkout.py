@@ -74,9 +74,9 @@ def make_payment(data, reference_doctype, reference_docname):
 	return data
 
 
-def check_payment(paymentId):
+def check_payment(paymentID):
 	try:
-		payment = mollie_client.payments.get(paymentId)
+		payment = mollie_client.payments.get(paymentID)
 	
 		if payment.is_paid():
 	            return "Paid"
