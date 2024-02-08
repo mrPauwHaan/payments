@@ -25,7 +25,6 @@ $(document).ready(function() {
 			},
 			if (r.message.paymentUrl) {
 					$('#submit').hide()
-					$('.success').show()
 					setTimeout(function() {
 						window.location.href = r.message.redirect_to
 						window.open(r.message.paymentUrl, "_blank");
