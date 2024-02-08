@@ -1,4 +1,4 @@
-mollie.addEventListener('submit', e => {
+addEventListener('submit', e => {
 	e.preventDefault();
 	var data = {{ frappe.form_dict | json }};
 	var doctype = "{{ reference_doctype }}"
