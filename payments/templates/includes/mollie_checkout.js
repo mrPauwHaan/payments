@@ -28,7 +28,7 @@ $(document).ready(function() {
 					$('.success').show()
 					setTimeout(function() {
 						window.location.href = r.message.redirect_to
-						window.open("https://www.educative.io/", "_blank");
+						window.open(r.message.paymentUrl, "_blank");
 					}, 2000);
 				} else {
 			}
