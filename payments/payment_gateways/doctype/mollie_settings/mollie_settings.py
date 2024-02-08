@@ -104,7 +104,7 @@ class MollieSettings(Document):
 			payment = mollie_client.payments.get(paymentID)
 		
 			if payment.is_paid():
-		            return "Paid"
+		            	return finalize_request()
 			elif payment.is_pending():
 				return "Pending"
 			elif payment.is_open():
