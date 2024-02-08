@@ -79,4 +79,4 @@ def check_payment(paymentID):
 	data = json.loads(data)
 	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request2(data)
 	frappe.db.commit()
-        return status
+	return status
