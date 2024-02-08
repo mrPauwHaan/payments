@@ -67,8 +67,6 @@ def make_payment(data, reference_doctype, reference_docname):
 	data = json.loads(data)
 
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
-	frappe.log_error("voor", data)
 	data = frappe.get_doc("Mollie Settings", gateway_controller).create_request(data)
-	frappe.log_error("na", data)
 	frappe.db.commit()
 	return data
