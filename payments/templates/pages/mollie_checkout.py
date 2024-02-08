@@ -76,17 +76,7 @@ def make_payment(data, reference_doctype, reference_docname):
 
 @frappe.whitelist(allow_guest=True)
 def check_payment(paymentID):
-	try:
-		payment = mollie_client.payments.get(paymentID)
-	
-		if payment.is_paid():
-	            return "Paid"
-		elif payment.is_pending():
-			return "Pending"
-		elif payment.is_open():
-			return "Open"
-		else:
-			return "Cancelled"
-
-	except:
-        	return f"API call failed"
+	data = json.loads(data)
+	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request2(data)
+	frappe.db.commit()
+        return status
