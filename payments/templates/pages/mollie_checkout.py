@@ -40,7 +40,7 @@ def get_context(context):
 	else:
 		frappe.redirect_to_message(
 			_("Some information is missing"),
-			_("Looks like someone sent you to an incomplete URL. Please ask them to look into it."),
+			_("Looks like someone sent you to an incomplete URL. Please ask them to look into it." expected_keys),
 		)
 		frappe.local.flags.redirect_location = frappe.local.response.location
 		raise frappe.Redirect
