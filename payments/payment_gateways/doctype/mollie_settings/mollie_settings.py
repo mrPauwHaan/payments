@@ -102,7 +102,7 @@ class MollieSettings(Document):
             		{
 				'amount': {
         				'currency': self.data.currency,
-        				'value': cint(flt(self.data.amount) * 100), 
+        				'value': cint(flt(self.data.amount) * 100)
     				},
                 		"description": self.data.description,
                 		"billingEmail": self.data.payer_email,
