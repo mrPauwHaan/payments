@@ -114,7 +114,7 @@ class MollieSettings(Document):
 				self.flags.status_changed_to = "Completed"
 
 			else:
-				frappe.log_error(charge.failure_message, "Mollie Payment not completed")
+				frappe.log_error(charge.detail, "Mollie Payment not completed")
 
 		except Exception:
 			frappe.log_error(frappe.get_traceback())
