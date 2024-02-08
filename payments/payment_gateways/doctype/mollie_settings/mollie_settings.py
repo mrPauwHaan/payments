@@ -7,8 +7,10 @@ from frappe.model.document import Document
 from frappe.utils import call_hook_method, cint, flt, get_url
 from payments.utils import create_payment_gateway
 from mollie.api.client import Client
+from mollie.api.error import Error
 
 mollie_client = Client()
+mollie_error = Error()
 
 class MollieSettings(Document):
 	supported_currencies = [
@@ -114,9 +116,10 @@ class MollieSettings(Document):
 				self.flags.status_changed_to = "Completed"
 
 			else:
-				frappe.log_error(charge.detail, "Mollie Payment not completed")
+				frappe.log_error(mollie_error, "Mollie Payment not completed")
 
 		except Exception:
+			frappe.log_error(mollie_error)
 			frappe.log_error(frappe.get_traceback())
 
 		return self.finalize_request()
