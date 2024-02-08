@@ -114,8 +114,6 @@ class MollieSettings(Document):
 			if charge.is_paid():
 				self.integration_request.db_set("status", "Completed", update_modified=False)
 				self.flags.status_changed_to = "Completed"
-			else:
-				frappe.log_error("Mollie Payment not completed", charge.status)
 
 		except Exception:
 			frappe.log_error(mollie_error)
