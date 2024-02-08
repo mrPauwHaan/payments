@@ -49,7 +49,7 @@ $(document).ready(function() {
 				"paymentID": payment.paymentID
 			},
 			callback: function(r){
-				
+				console.log(r.message)
 			}
 		})
 	}, 5000);
