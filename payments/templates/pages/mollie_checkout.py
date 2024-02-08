@@ -38,7 +38,12 @@ def get_context(context):
 		context["amount"] = fmt_money(amount=context["amount"], currency=context["currency"])
 
 	else:
-		frappe.log_error(frappe.form_dict, "Mollie Payment not completed")
+		frappe.redirect_to_message(
+			_("Some information is missing"),
+			frappe.form_dict,
+		)
+		frappe.local.flags.redirect_location = frappe.local.response.location
+		raise frappe.Redirect
 		
 
 
