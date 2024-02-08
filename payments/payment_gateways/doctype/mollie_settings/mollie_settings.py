@@ -121,7 +121,10 @@ class MollieSettings(Document):
 			frappe.log_error(mollie_error)
 			frappe.log_error(frappe.get_traceback())
 
-		return self.finalize_request()
+		data2 = self.finalize_request()
+		data2.update(paymentID=payment.id)
+		
+		return data2
 
 	def finalize_request(self):
 		redirect_to = self.data.get("redirect_to") or None
