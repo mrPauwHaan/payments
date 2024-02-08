@@ -104,7 +104,7 @@ class MollieSettings(Document):
             		{
 				'amount': {
         				'currency': self.data.currency,
-        				'value': '10.00'
+        				'value': '20.00'
     				},
                 		"description": self.data.description,
 				'redirectUrl': self.data.get("redirect_to"),
