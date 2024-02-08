@@ -76,7 +76,7 @@ class MollieSettings(Document):
 			)
 
 	def get_payment_url(self, **kwargs):
-		return get_url(f"home")
+		return get_url(f"mollie_checkout?{urlencode(kwargs)}")
 
 	def create_request(self, data):
 		self.data = frappe._dict(data)
