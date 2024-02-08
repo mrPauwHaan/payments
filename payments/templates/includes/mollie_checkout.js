@@ -31,7 +31,7 @@ $(document).ready(function() {
 						$('#processing').show()
 						setTimeout(function() {
 							window.open(r.message.paymentUrl, "_blank");
-						}, 2000);
+						}, 1000);
 					} else {
 				}
 			}
