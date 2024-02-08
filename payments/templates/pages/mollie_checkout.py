@@ -78,8 +78,3 @@ def make_payment(data, reference_doctype, reference_docname):
 
 	frappe.db.commit()
 	return data
-
-def is_a_subscription(reference_doctype, reference_docname):
-	if not frappe.get_meta(reference_doctype).has_field("is_a_subscription"):
-		return False
-	return frappe.db.get_value(reference_doctype, reference_docname, "is_a_subscription")
