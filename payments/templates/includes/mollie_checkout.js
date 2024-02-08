@@ -28,7 +28,7 @@ $(document).ready(function() {
 				}
 				if (r.message.paymentUrl) {
 						$('#submit').hide()
-						$('#processing').show()
+						$('#processing').css('visibility','visible');
 						setTimeout(function() {
 							window.open(r.message.paymentUrl, "_blank");
 						}, 1000);
