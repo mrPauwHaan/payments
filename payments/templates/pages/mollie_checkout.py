@@ -38,6 +38,13 @@ def get_context(context):
 		context["amount"] = fmt_money(amount=context["amount"], currency=context["currency"])
 
 	else:
+		if expected_keys is not None 
+			for key in expected_keys:
+				frappe.log_error(key, "Data to complete the payment is missing")
+		else:
+			frappe.log_error("no expected keys", "Data to complete the payment is missing")
+		
+		
 		frappe.redirect_to_message(
 			_("Some information is missing"),
 			_("Looks like someone sent you to an incomplete URL. Please ask them to look into it."),
