@@ -22,8 +22,6 @@ $(document).ready(function() {
 						window.location.href = r.message.redirect_to
 					}, 2000);
 				} else {
-					$('#submit').hide()
-					$('.error').show()
 			}
 		}
 		
