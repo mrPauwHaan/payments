@@ -98,6 +98,23 @@ class MollieSettings(Document):
 				"status": 401,
 			}
 
+	def check_request2(self, data):
+		mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
+		try:
+			payment = mollie_client.payments.get(paymentID)
+		
+			if payment.is_paid():
+		            return "Paid"
+			elif payment.is_pending():
+				return "Pending"
+			elif payment.is_open():
+				return "Open"
+			else:
+				return "Cancelled"
+
+		except:
+	        	return f"API call failed"
+
 	def create_charge_on_mollie(self):
 		try:
 			charge = mollie_client.payments.create(
