@@ -72,3 +72,20 @@ def make_payment(data, reference_doctype, reference_docname):
 	frappe.log_error("na", data)
 	frappe.db.commit()
 	return data
+
+
+def check_payment(paymentId)
+	try:
+		payment = mollie_client.payments.get(paymentId)
+	
+		if payment.is_paid():
+	            return "Paid"
+	        elif payment.is_pending():
+	            return "Pending"
+	        elif payment.is_open():
+	            return "Open"
+	        else:
+	            return "Cancelled"
+
+	except Error as err:
+        	return f"API call failed"
