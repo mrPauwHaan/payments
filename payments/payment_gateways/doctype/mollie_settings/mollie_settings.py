@@ -105,6 +105,7 @@ class MollieSettings(Document):
         				'value': '10.00'
     				},
                 		"description": self.data.description,
+				'redirectUrl': self.finalize_request(),
             			}
         		)
 
