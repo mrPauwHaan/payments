@@ -24,9 +24,6 @@ $(document).ready(function() {
 				} else {
 					$('#submit').hide()
 					$('.error').show()
-					setTimeout(function() {
-						frappe.log_error("Niet betaald")
-					}, 2000);
 			}
 		}
 		
