@@ -17,7 +17,7 @@ $(document).ready(function() {
 		callback: function(r){
 			if (r.message.status == "Completed") {
 					$('#submit').hide()
-					$('.success').show()
+					$('#processing').hide()
 					setTimeout(function() {
 						window.location.href = r.message.redirect_to
 					}, 2000);
@@ -25,6 +25,7 @@ $(document).ready(function() {
 			}
 			if (r.message.paymentUrl) {
 					$('#submit').hide()
+					$('#processing').show()
 					setTimeout(function() {
 						window.open(r.message.paymentUrl, "_blank");
 					}, 2000);
