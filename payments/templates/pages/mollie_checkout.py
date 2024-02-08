@@ -74,6 +74,7 @@ def make_payment(data, reference_doctype, reference_docname):
 	return data
 
 
+@frappe.whitelist(allow_guest=True)
 def check_payment(paymentID):
 	try:
 		payment = mollie_client.payments.get(paymentID)
