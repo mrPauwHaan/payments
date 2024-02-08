@@ -15,11 +15,18 @@ $(document).ready(function() {
 			"reference_docname": docname
 		},
 		callback: function(r){
-			if (r.message && r.message.status == 200) {
-				window.location.href = r.message.redirect_to
-			}
-			else if (r.message && ([401,400,500].indexOf(r.message.status) > -1)) {
-				window.location.href = r.message.redirect_to
+			if (r.message.status == "Completed") {
+				$('#submit').hide()
+				$('.success').show()
+				setTimeout(function() {
+					window.location.href = r.message.redirect_to
+				}, 2000);
+			} else {
+				$('#submit').hide()
+				$('.error').show()
+				setTimeout(function() {
+					window.location.href = r.message.redirect_to
+				}, 2000);
 			}
 		}
 	})
