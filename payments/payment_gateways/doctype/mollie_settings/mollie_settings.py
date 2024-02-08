@@ -122,7 +122,7 @@ class MollieSettings(Document):
 			frappe.log_error(frappe.get_traceback())
 
 		data2 = self.finalize_request()
-		data2.update(paymentID=payment.id)
+		data2.update(paymentID=charge.id)
 		
 		return data2
 
