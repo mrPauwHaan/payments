@@ -47,6 +47,8 @@ $(document).ready(function() {
 			},
 			args: {
 				"data": JSON.stringify(data),
+				"reference_doctype": doctype,
+				"reference_docname": docname,
 				"paymentID": payment.paymentID
 			},
 			callback: function(r){
