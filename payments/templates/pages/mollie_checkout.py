@@ -38,13 +38,8 @@ def get_context(context):
 		context["amount"] = fmt_money(amount=context["amount"], currency=context["currency"])
 
 	else:
-		frappe.redirect_to_message(
-			_("Some information is missing"),
-			_("Looks like someone sent you to an incomplete URL. Please ask them to look into it."),
-		)
 		frappe.log_error(frappe.form_dict, "Mollie Payment not completed")
-		frappe.local.flags.redirect_location = frappe.local.response.location
-		raise frappe.Redirect
+		
 
 
 def get_api_key(doc, gateway_controller):
