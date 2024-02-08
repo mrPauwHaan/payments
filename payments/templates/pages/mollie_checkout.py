@@ -39,6 +39,7 @@ def get_context(context):
 
 	else:
 		frappe.log_error(frappe.form_dict, "Data to complete the payment is missing")
+		frappe.log_error(expected_keys, "Data to complete the payment is missing")
 		frappe.redirect_to_message(
 			_("Some information is missing"),
 			_("Looks like someone sent you to an incomplete URL. Please ask them to look into it."),
