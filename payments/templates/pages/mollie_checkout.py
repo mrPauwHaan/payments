@@ -38,7 +38,6 @@ def get_context(context):
 		context["amount"] = fmt_money(amount=context["amount"], currency=context["currency"])
 
 	else:
-		frappe.log_error(frappe.form_dict, "Data to complete the payment is missing")
 		frappe.log_error(expected_keys, "Data to complete the payment is missing")
 		frappe.redirect_to_message(
 			_("Some information is missing"),
