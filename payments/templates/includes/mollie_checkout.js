@@ -46,6 +46,7 @@ $(document).ready(function() {
 				"X-Requested-With": "XMLHttpRequest"
 			},
 			args: {
+				"data": JSON.stringify(data),
 				"paymentID": payment.paymentID
 			},
 			callback: function(r){
