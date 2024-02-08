@@ -36,4 +36,21 @@ $(document).ready(function() {
 				} else {
 			}
 	})
+
+	
+	var intervalId = window.setInterval(function(){
+	  	frappe.call({
+			method: "payments.templates.pages.mollie_checkout.check_payment",
+			freeze: true,
+			headers: {
+				"X-Requested-With": "XMLHttpRequest"
+			},
+			args: {
+				"paymentID": payment.paymentID
+			},
+			callback: function(r){
+				
+			}
+		})
+	}, 5000);
 })
