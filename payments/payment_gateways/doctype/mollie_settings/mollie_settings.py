@@ -105,7 +105,6 @@ class MollieSettings(Document):
         				'value': '10.00'
     				},
                 		"description": self.data.description,
-                		"billingEmail": self.data.payer_email,
             			}
         		)
 
