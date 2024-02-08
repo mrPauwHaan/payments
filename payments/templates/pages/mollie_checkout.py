@@ -80,12 +80,12 @@ def check_payment(paymentId):
 	
 		if payment.is_paid():
 	            return "Paid"
-	        elif payment.is_pending():
-	            return "Pending"
-	        elif payment.is_open():
-	            return "Open"
-	        else:
-	            return "Cancelled"
+		elif payment.is_pending():
+			return "Pending"
+		elif payment.is_open():
+			return "Open"
+		else:
+			return "Cancelled"
 
 	except Error as err:
         	return f"API call failed"
