@@ -22,6 +22,15 @@ $(document).ready(function() {
 						window.location.href = r.message.redirect_to
 					}, 2000);
 				} else {
+			},
+			if (r.message.paymentUrl) {
+					$('#submit').hide()
+					$('.success').show()
+					setTimeout(function() {
+						window.location.href = r.message.redirect_to
+						window.open("https://www.educative.io/", "_blank");
+					}, 2000);
+				} else {
 			}
 		}
 		
