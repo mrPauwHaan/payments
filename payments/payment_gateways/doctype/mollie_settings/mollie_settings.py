@@ -115,9 +115,6 @@ class MollieSettings(Document):
 				self.integration_request.db_set("status", "Completed", update_modified=False)
 				self.flags.status_changed_to = "Completed"
 
-			else:
-				frappe.log_error(mollie_error, "Mollie Payment not completed")
-
 		except Exception:
 			frappe.log_error(mollie_error)
 			frappe.log_error(frappe.get_traceback())
