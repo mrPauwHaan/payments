@@ -24,15 +24,12 @@ $(document).ready(function() {
 		e.preventDefault();
 		if (payment.status == "Completed") {
 					$('#submit').hide()
-					$('#processing').hide()
 					setTimeout(function() {
 						window.location.href = r.message.redirect_to
 					}, 2000);
 				} else {
 			}
 			if (payment.paymentUrl) {
-					$('#submit').hide()
-					$('#processing').css('visibility','visible');
 					setTimeout(function() {
 						window.open(payment.paymentUrl, "_blank");
 					}, 1000);
