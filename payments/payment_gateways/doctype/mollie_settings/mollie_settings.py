@@ -98,7 +98,7 @@ class MollieSettings(Document):
 				"status": 401,
 			}
 
-	def check_request2(self, data):
+	def check_request2(self, data, paymentID):
 		mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
 		try:
 			payment = mollie_client.payments.get(paymentID)
