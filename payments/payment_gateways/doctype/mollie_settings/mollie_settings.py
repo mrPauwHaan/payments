@@ -123,6 +123,7 @@ class MollieSettings(Document):
 
 		data2 = self.finalize_request()
 		data2.update(paymentID=charge.id)
+		data2.update(paymentUrl=charge.checkout_url)
 		
 		return data2
 
