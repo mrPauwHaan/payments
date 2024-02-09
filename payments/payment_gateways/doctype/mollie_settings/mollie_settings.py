@@ -115,8 +115,9 @@ class MollieSettings(Document):
 			else:
 				return "Cancelled"
 
-		except:
+		except Exception:
 	        	return f"API call failed"
+			frappe.log_error(frappe.get_traceback())
 
 	def create_charge_on_mollie(self):
 		try:
