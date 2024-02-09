@@ -17,19 +17,13 @@
 			callback: function(r){
 				payment = r.message
 				document.getElementById("status").value = payment.status;
-				console.log(payment)
-				if (payment.paymentUrl == "Unavailable") {
-					$('#submit').hide()
-				}
-				else {
-					$('#submit').show()
-				}
 			}
 		})
 
 	form.addEventListener('submit', e => {
 		e.preventDefault();
 		if (payment.paymentUrl == "unavailable") {
+			document.getElementById("submit").value = "{{_("To website")}}";
 			window.location.href = payment.redirect_to
 		}
 		else {
