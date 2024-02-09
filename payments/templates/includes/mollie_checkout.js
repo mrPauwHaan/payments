@@ -13,7 +13,6 @@ $(document).ready(function() {
 				"data": JSON.stringify(data),
 				"reference_doctype": doctype,
 				"reference_docname": docname,
-				"paymentID": payment.paymentID
 			},
 			callback: function(r){
 				document.getElementById("status").value = r.message;
