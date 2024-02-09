@@ -131,6 +131,7 @@ class MollieSettings(Document):
 				"currency": self.data.currency,
 				"redirect_to": self.data.get("redirect_to"),
 			}
+		redirect_url = get_payment_url(**data_details)
 
 		
 		try:
@@ -141,7 +142,7 @@ class MollieSettings(Document):
         				'value': "{:.2f}".format(float(self.data.amount))
     				},
                 		"description": self.data.description,
-				'redirectUrl': self.data.get("redirect_to"),
+				'redirectUrl': redirect_url,
             			}
         		)
 
