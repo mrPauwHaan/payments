@@ -54,6 +54,7 @@ $(document).ready(function() {
 			},
 			callback: function(r){
 				console.log(r.message)
+				$('#submit').innerHTML = "Processed";
 			}
 		})
 	}, 5000);
