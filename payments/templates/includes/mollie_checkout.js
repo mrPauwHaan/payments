@@ -18,18 +18,14 @@
 				payment = r.message
 				document.getElementById("status").value = payment.status;
 				console.log(payment)
+				if (payment.paymentUrl == "unavailable") {
+					document.getElementById("submit").hide();
+				}
 			}
 		})
 
 	form.addEventListener('submit', e => {
 		e.preventDefault();
-		if (payment.status == "Completed") {
-					$('#submit').hide()
-					setTimeout(function() {
-						window.location.href = r.message.redirect_to
-					}, 2000);
-				} else {
-			}
 		if (payment.paymentUrl == "unavailable") {
 			window.location.href = payment.redirect_to
 		}
