@@ -63,22 +63,15 @@ def get_header_image(doc, gateway_controller):
 
 
 @frappe.whitelist(allow_guest=True)
-def make_payment(data, gateway_controller):
-	data = frappe.get_doc("Mollie Settings", gateway_controller).create_request(data)
-	frappe.db.commit()
-	return data
-
-
-@frappe.whitelist(allow_guest=True)
-def check_payment(data, reference_doctype, reference_docname):
+def make_payment(data, reference_doctype, reference_docname):
 	data = json.loads(data)
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
 
 	paymentID = frappe.db.get_value(reference_doctype, reference_docname, 'payment_id')
 	if not paymentID:
-		payment = make_payment(data, gateway_controller)
-		paymentID = payment.status
+		payment = frappe.get_doc("Mollie Settings", gateway_controller).create_request(data)
+		paymentID = payment.paymentID
 	
-	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request2(data, paymentID)
+	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request(data, paymentID)
 	frappe.db.commit()
 	return status
