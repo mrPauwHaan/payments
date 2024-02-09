@@ -30,7 +30,7 @@ $(document).ready(function() {
 					}, 2000);
 				} else {
 			}
-		if not payment.paymentUrl == "unavailable" {
+		if !(payment.paymentUrl == "unavailable") {
 			window.open(payment.paymentUrl, "_blank");
 		}
 	})
