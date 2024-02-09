@@ -17,13 +17,17 @@
 			callback: function(r){
 				payment = r.message
 				document.getElementById("status").value = payment.status;
+				if (payment.paymentUrl == "unavailable") {
+					document.getElementById("submit").innerHTML = "{{_("Ready")}}";
+				}
+				else {
+				}
 			}
 		})
 
 	form.addEventListener('submit', e => {
 		e.preventDefault();
-		if (payment.paymentUrl == "unavailable") {
-			document.getElementById("submit").innerHTML = "{{_("Ready")}}";
+		if (payment.paymentUrl == "Unavailable") {
 			window.location.href = payment.redirect_to
 		}
 		else {
