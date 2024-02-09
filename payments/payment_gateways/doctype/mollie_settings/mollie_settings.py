@@ -106,8 +106,6 @@ class MollieSettings(Document):
 		
 			if payment.is_paid():
 				status = "Completed"
-				if hasattr(self.data.reference_doctype, 'payment_status'):
-					frappe.db.set_value(self.data.reference_doctype, self.data.reference_docname, 'payment_status', 'Completed')
 			elif payment.is_pending():
 				status = "Pending"
 				paymentUrl = payment['_links']['_links']['checkout']['href']
@@ -116,8 +114,11 @@ class MollieSettings(Document):
 				paymentUrl = payment['_links']['_links']['checkout']['href']
 			else:
 				status = "Cancelled"
-
-			return {"paymentUrl": paymentUrl, "status": status}
+			
+			if paymentUrl:
+				return {"paymentUrl": paymentUrl, "status": status}
+			else:
+				return {"status": status}
 
 		except Exception:
 			frappe.log_error(frappe.get_traceback())
