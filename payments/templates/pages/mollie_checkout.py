@@ -73,17 +73,20 @@ def make_payment(data, reference_doctype, reference_docname):
 		paymentID = data["paymentID"]
 	
 	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request(data, paymentID)
+
+	if status["paymentUrl"]:
+		data["paymentUrl"] = status["paymentUrl"]
 	
 	if status["status"] == "Cancelled":
 		data = frappe.get_doc("Mollie Settings", gateway_controller).create_request(data)
 		paymentID = data["paymentID"]
 		data["status"] = "Open"
+		data["paymentUrl"] = data["paymentUrl"]
 	else:
 		data["status"] = status["status"]
 
 
-	if status["paymentUrl"]:
-		data["paymentUrl"] = status["paymentUrl"]
+
 
 	if hasattr(reference_doctype, 'payment_status'):
 		frappe.db.set_value(reference_doctype, reference_docname, 'payment_status', status["status"])
