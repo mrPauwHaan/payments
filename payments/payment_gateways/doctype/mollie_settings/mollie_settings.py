@@ -131,7 +131,7 @@ class MollieSettings(Document):
 				"currency": self.data.currency,
 				"redirect_to": self.data.get("redirect_to"),
 			}
-		redirect_url = get_payment_url(**data_details)
+		redirect_url = self.get_payment_url(**data_details)
 
 		
 		try:
