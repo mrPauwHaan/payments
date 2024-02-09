@@ -73,7 +73,7 @@ def make_payment(data, reference_doctype, reference_docname):
 
 
 @frappe.whitelist(allow_guest=True)
-def check_payment(data, paymentID, reference_doctype, reference_docname):
+def check_payment(data, reference_doctype, reference_docname):
 	data = json.loads(data)
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
 
