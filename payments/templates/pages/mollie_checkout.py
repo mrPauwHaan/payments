@@ -83,6 +83,9 @@ def make_payment(data, reference_doctype, reference_docname):
 
 	if status["paymentUrl"]:
 		data["paymentUrl"] = status["paymentUrl"]
+
+	if hasattr(reference_doctype, 'payment_status'):
+		frappe.db.set_value(reference_doctype, reference_docname, 'payment_status', status["status"])
 	
 	frappe.db.commit()
 	return data
