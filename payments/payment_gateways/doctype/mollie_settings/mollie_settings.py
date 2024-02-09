@@ -141,7 +141,7 @@ class MollieSettings(Document):
         				'value': "{:.2f}".format(float(self.data.amount))
     				},
                 		"description": self.data.description,
-				'redirectUrl': redirect_url += "&" + urlencode({"status": charge.status}),
+				'redirectUrl': redirect_url,
             			}
         		)
 
