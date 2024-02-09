@@ -31,10 +31,6 @@ $(document).ready(function() {
 			}
 		if (payment.paymentUrl) {
 			window.open(payment.paymentUrl, "_blank");
-			$('#submit').disabled = true;
-			setTimeout(function() {
-				$('#submit').disabled = false;
-			}, 3000);
 		}
 	})
 
