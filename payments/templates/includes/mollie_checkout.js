@@ -3,6 +3,8 @@
 	var data = {{ frappe.form_dict | json }};
 	var doctype = "{{ reference_doctype }}"
 	var docname = "{{ reference_docname }}"
+	document.getElementById("submit").innerHTML = "{{_("Loading...")}}";
+	document.getElementById("status").value = "{{_("Loading...")}}";
 	frappe.call({
 			method: "payments.templates.pages.mollie_checkout.make_payment",
 			freeze: true,
@@ -21,6 +23,7 @@
 					document.getElementById("submit").innerHTML = "{{_("Ready")}}";
 				}
 				else {
+					document.getElementById("submit").innerHTML = "{{_('Pay')}} {{amount}}";
 				}
 			}
 		})
