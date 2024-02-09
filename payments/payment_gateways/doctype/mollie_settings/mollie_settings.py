@@ -102,7 +102,7 @@ class MollieSettings(Document):
 		mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
 		try:
 			payment = mollie_client.payments.get(paymentID)
-			paymentUrl = payment['_links']['checkout']['href']
+			paymentUrl = payment['_links']
 		
 			if payment.is_paid():
 				if hasattr(self.data.reference_doctype, 'payment_status'):
