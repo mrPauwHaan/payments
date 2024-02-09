@@ -15,7 +15,8 @@ $(document).ready(function() {
 				"reference_docname": docname,
 			},
 			callback: function(r){
-				document.getElementById("status").value = r.message;
+				payment = r.message
+				document.getElementById("status").value = data.status;
 			}
 		})
 
