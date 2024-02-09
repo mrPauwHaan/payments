@@ -30,7 +30,10 @@ $(document).ready(function() {
 					}, 2000);
 				} else {
 			}
-		if !(payment.paymentUrl == "unavailable") {
+		if (payment.paymentUrl == "unavailable") {
+			window.location.href = r.message.redirect_to
+		}
+		else {
 			window.open(payment.paymentUrl, "_blank");
 		}
 	})
