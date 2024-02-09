@@ -104,7 +104,7 @@ class MollieSettings(Document):
 			payment = mollie_client.payments.get(paymentID)
 		
 			if payment.is_paid():
-				if hasattr(self.data.reference_doctype, 'payment_status')::
+				if hasattr(self.data.reference_doctype, 'payment_status'):
 					frappe.db.set_value(self.data.reference_doctype, self.data.reference_docname, 'payment_status', 'Completed')
 					
 				return "Completed"
