@@ -119,6 +119,20 @@ class MollieSettings(Document):
 	        	return f"API call failed"
 
 	def create_charge_on_mollie(self):
+		data_details = {
+				"amount": self.data.amount,
+				"title": f"Payment for {self.data.doctype} {self.data.name}",
+				"description": f"Payment for {self.data.doctype} {self.data.name}",
+				"reference_doctype": self.data.doctype,
+				"reference_docname": self.data.name,
+				"payer_email": frappe.session.user,
+				"payer_name": frappe.utils.get_fullname(frappe.session.user),
+				"order_id": self.data.name,
+				"currency": self.data.currency,
+				"redirect_to": self.data.get("redirect_to"),
+			}
+
+		
 		try:
 			charge = mollie_client.payments.create(
             		{
