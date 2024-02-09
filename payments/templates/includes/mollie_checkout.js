@@ -4,7 +4,7 @@ $(document).ready(function() {
 	var doctype = "{{ reference_doctype }}"
 	var docname = "{{ reference_docname }}"
 	frappe.call({
-			method: "payments.templates.pages.mollie_checkout.check_payment",
+			method: "payments.templates.pages.mollie_checkout.make_payment",
 			freeze: true,
 			headers: {
 				"X-Requested-With": "XMLHttpRequest"
