@@ -1,4 +1,4 @@
-$(document).ready(function() {
++$(document).ready(function() {
 	var form = document.querySelector('#payment-form');
 	var data = {{ frappe.form_dict | json }};
 	var doctype = "{{ reference_doctype }}"
@@ -31,7 +31,7 @@ $(document).ready(function() {
 				} else {
 			}
 		if (payment.paymentUrl == "unavailable") {
-			window.location.href = r.message.redirect_to
+			window.location.href = payment.redirect_to
 		}
 		else {
 			window.open(payment.paymentUrl, "_blank");
