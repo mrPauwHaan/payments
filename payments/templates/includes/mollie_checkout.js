@@ -50,7 +50,7 @@ $(document).ready(function() {
 			},
 			callback: function(r){
 				console.log(r.message)
-				$('#status').innerHTML = "Processed";
+				$('#status').innerHTML = r.message;
 			}
 		})
 	}, 5000);
