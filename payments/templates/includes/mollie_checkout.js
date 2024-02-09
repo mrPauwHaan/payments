@@ -49,7 +49,6 @@ $(document).ready(function() {
 				"paymentID": payment.paymentID
 			},
 			callback: function(r){
-				console.log(r.message)
 				document.getElementById("status").value = r.message;
 			}
 		})
