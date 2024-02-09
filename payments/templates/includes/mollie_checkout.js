@@ -19,7 +19,10 @@
 				document.getElementById("status").value = payment.status;
 				console.log(payment)
 				if (payment.paymentUrl == "Unavailable") {
-					document.getElementById("submit").hide();
+					$('#submit').hide()
+				}
+				else {
+					$('#submit').show()
 				}
 			}
 		})
