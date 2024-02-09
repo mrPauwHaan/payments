@@ -72,8 +72,9 @@ def make_payment(data, reference_doctype, reference_docname):
 	if not paymentID:
 		paymentID = data.paymentID
 	
-	data.status = frappe.get_doc("Mollie Settings", gateway_controller).check_request(data, paymentID)
-	
+	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request(data, paymentID)
+
+	data.status = status
 	
 	frappe.db.commit()
 	return data
