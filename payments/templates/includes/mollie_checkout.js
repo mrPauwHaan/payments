@@ -17,7 +17,7 @@
 			callback: function(r){
 				payment = r.message
 				document.getElementById("status").value = payment.status;
-				if (payment.paymentUrl == "unavailable") {
+				if (payment.paymentUrl == "Unavailable") {
 					document.getElementById("submit").innerHTML = "{{_("Ready")}}";
 				}
 				else {
