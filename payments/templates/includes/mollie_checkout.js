@@ -27,7 +27,7 @@
 			window.location.href = payment.redirect_to
 		}
 		else {
-			window.open(payment.paymentUrl, "_blank");
+			window.location.href = payment.paymentUrl
 		}
 	})
 })
