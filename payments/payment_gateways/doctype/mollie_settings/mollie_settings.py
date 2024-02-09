@@ -117,7 +117,7 @@ class MollieSettings(Document):
 			else:
 				status = "Cancelled"
 
-			return paymentUrl, status
+			return {"paymentUrl": paymentUrl, "status": status}
 
 		except Exception:
 			frappe.log_error(frappe.get_traceback())
