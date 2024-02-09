@@ -119,22 +119,21 @@ class MollieSettings(Document):
 	        	return f"API call failed"
 
 	def create_charge_on_mollie(self):
-		data_details = {
-				"amount": self.data.amount,
-				"title": f"Payment for {self.data.doctype} {self.data.name}",
-				"description": f"Payment for {self.data.doctype} {self.data.name}",
-				"reference_doctype": self.data.doctype,
-				"reference_docname": self.data.name,
-				"payer_email": frappe.session.user,
-				"payer_name": frappe.utils.get_fullname(frappe.session.user),
-				"order_id": self.data.name,
-				"currency": self.data.currency,
-				"redirect_to": self.data.get("redirect_to"),
-			}
-		redirect_url = self.get_payment_url(**data_details)
-
-		
 		try:
+			data_details = {
+					"amount": self.data.amount,
+					"title": f"Payment for {self.data.reference_doctype} {self.data.reference_docname}",
+					"description": f"Payment for {self.data.reference_doctype} {self.data.reference_docname}",
+					"reference_doctype": self.data.reference_doctype,
+					"reference_docname": self.data.reference_docname,
+					"payer_email": frappe.session.user,
+					"payer_name": frappe.utils.get_fullname(frappe.session.user),
+					"order_id": self.data.reference_docname,
+					"currency": self.data.currency,
+					"redirect_to": self.data.get("redirect_to"),
+				}
+			redirect_url = self.get_payment_url(**data_details)
+		
 			charge = mollie_client.payments.create(
             		{
 				'amount': {
@@ -151,7 +150,9 @@ class MollieSettings(Document):
 				self.flags.status_changed_to = "Completed"
 
 		except Exception:
-			frappe.log_error(mollie_error)
+			if mollie_error:
+				frappe.log_error(mollie_error)
+			
 			frappe.log_error(frappe.get_traceback())
 
 		data2 = self.finalize_request()
