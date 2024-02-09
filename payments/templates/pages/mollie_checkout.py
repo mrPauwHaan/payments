@@ -74,7 +74,9 @@ def make_payment(data, reference_doctype, reference_docname):
 	
 	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request(data, paymentID)
 	data["status"] = status["status"]
-	data["paymentUrl"] = status["paymentUrl"]
+
+	if status["paymentUrl"]:
+		data["paymentUrl"] = status["paymentUrl"]
 	
 	frappe.db.commit()
 	return data
