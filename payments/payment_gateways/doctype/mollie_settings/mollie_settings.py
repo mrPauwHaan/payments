@@ -102,7 +102,6 @@ class MollieSettings(Document):
 		mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
 		try:
 			payment = mollie_client.payments.get(paymentID)
-			paymentUrl = "Not available"
 		
 			if payment.is_paid():
 				status = "Completed"
