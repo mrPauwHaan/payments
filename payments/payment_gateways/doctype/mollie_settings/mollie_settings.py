@@ -102,6 +102,7 @@ class MollieSettings(Document):
 		mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
 		try:
 			payment = mollie_client.payments.get(paymentID)
+			paymentUrl = "Unavailable"
 		
 			if payment.is_paid():
 				status = "Completed"
@@ -114,10 +115,7 @@ class MollieSettings(Document):
 			else:
 				status = "Cancelled"
 			
-			if paymentUrl:
-				return {"paymentUrl": paymentUrl, "status": status}
-			else:
-				return {"status": status}
+			return {"paymentUrl": paymentUrl, "status": status}
 
 		except Exception:
 			frappe.log_error(frappe.get_traceback())
