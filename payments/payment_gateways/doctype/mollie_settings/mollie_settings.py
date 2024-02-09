@@ -107,10 +107,10 @@ class MollieSettings(Document):
 				status = "Completed"
 			elif payment.is_pending():
 				status = "Pending"
-				paymentUrl = payment['_links']['_links']['checkout']['href']
+				paymentUrl = payment['_links']['checkout']['href']
 			elif payment.is_open():
 				status = "Open"
-				paymentUrl = payment['_links']['_links']['checkout']['href']
+				paymentUrl = payment['_links']['checkout']['href']
 			else:
 				status = "Cancelled"
 			
