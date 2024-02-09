@@ -75,8 +75,13 @@ def make_payment(data, reference_doctype, reference_docname):
 @frappe.whitelist(allow_guest=True)
 def check_payment(data, paymentID, reference_doctype, reference_docname):
 	data = json.loads(data)
-
 	gateway_controller = get_gateway_controller(reference_doctype, reference_docname)
+
+	paymentID = frappe.db.get_value(reference_doctype, reference_docname, 'payment_id')
+	if not paymentID:
+		payment = self.make_payment(data, reference_doctype, reference_docname)
+		paymentID = payment.status
+	
 	status = frappe.get_doc("Mollie Settings", gateway_controller).check_request2(data, paymentID)
 	frappe.db.commit()
 	return status
