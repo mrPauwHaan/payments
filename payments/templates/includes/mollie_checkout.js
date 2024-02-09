@@ -16,7 +16,8 @@ $(document).ready(function() {
 			},
 			callback: function(r){
 				payment = r.message
-				document.getElementById("status").value = data.status;
+				document.getElementById("status").value = payment.status;
+				console.log(payment)
 			}
 		})
 
