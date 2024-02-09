@@ -1,6 +1,5 @@
 $(document).ready(function() {
 	var form = document.querySelector('#payment-form');
-	var status = document.querySelector('#status');
 	var data = {{ frappe.form_dict | json }};
 	var doctype = "{{ reference_doctype }}"
 	var docname = "{{ reference_docname }}"
@@ -51,7 +50,7 @@ $(document).ready(function() {
 			},
 			callback: function(r){
 				console.log(r.message)
-				status.innerHTML = r.message;
+				document.getElementById("status").value = r.message;
 			}
 		})
 	}, 5000);
