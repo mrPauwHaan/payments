@@ -18,7 +18,7 @@
 				payment = r.message
 				document.getElementById("status").value = payment.status;
 				console.log(payment)
-				if (payment.paymentUrl == "unavailable") {
+				if (payment.paymentUrl == "Unavailable") {
 					document.getElementById("submit").hide();
 				}
 			}
