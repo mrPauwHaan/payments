@@ -26,7 +26,7 @@ $(document).ready(function() {
 		if (payment.status == "Completed") {
 					$('#submit').hide()
 					setTimeout(function() {
-						window.location.href = payment.redirect_to
+						window.location.href = r.message.redirect_to
 					}, 2000);
 				} else {
 			}
