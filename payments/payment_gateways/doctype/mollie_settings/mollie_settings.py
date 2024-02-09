@@ -102,18 +102,20 @@ class MollieSettings(Document):
 		mollie_client.set_api_key(self.get_password(fieldname="secret_key", raise_exception=False))
 		try:
 			payment = mollie_client.payments.get(paymentID)
+			paymentUrl = payment['_links']['checkout']['href']
 		
 			if payment.is_paid():
 				if hasattr(self.data.reference_doctype, 'payment_status'):
 					frappe.db.set_value(self.data.reference_doctype, self.data.reference_docname, 'payment_status', 'Completed')
-					
-				return "Completed"
+					status = "Completed"
 			elif payment.is_pending():
-				return "Pending"
+				status = "Pending"
 			elif payment.is_open():
-				return "Open"
+				status = "Open"
 			else:
-				return "Cancelled"
+				status = "Cancelled"
+
+			return paymentUrl, status
 
 		except Exception:
 			frappe.log_error(frappe.get_traceback())
