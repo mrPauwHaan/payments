@@ -23,7 +23,7 @@
 	form.addEventListener('submit', e => {
 		e.preventDefault();
 		if (payment.paymentUrl == "unavailable") {
-			document.getElementById("submit").value = "{{_("Ready")}}";
+			document.getElementById("submit").innerHTML = "{{_("Ready")}}";
 			window.location.href = payment.redirect_to
 		}
 		else {
