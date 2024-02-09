@@ -108,7 +108,7 @@ class MollieSettings(Document):
 				if payment_status_field:
 					frappe.db.set_value(self.data.reference_doctype, self.data.reference_docname, 'payment_status', 'Completed')
 					
-		            	return "Completed"
+				return "Completed"
 			elif payment.is_pending():
 				return "Pending"
 			elif payment.is_open():
