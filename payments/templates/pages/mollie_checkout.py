@@ -85,13 +85,10 @@ def make_payment(data, reference_doctype, reference_docname):
 		status = status["status"]
 		data["status"] = status
 
-
-
-
-	if hasattr(reference_doctype, 'payment_status'):
+	try:
 		frappe.db.set_value(reference_doctype, reference_docname, 'payment_status', status)
-	else:
-		frappe.log_error("Doctype field payment_status not existent", reference_doctype)
+	except:
+		pass
 	
 	frappe.db.commit()
 	return data
