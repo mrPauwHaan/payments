@@ -149,7 +149,7 @@ class MollieSettings(Document):
                 'redirectUrl': redirect_url,
             }
 
-			if self.data.payer_email and not self.data.payer_email == "Guest":
+			if self.data.payer_email and not self.data.payer_email == "Guest" and frappe.utils.validate_email_address(self.data.payer_email):
 				charge_data['billingAddress'] = {
 					'email': self.data.payer_email
 				}
