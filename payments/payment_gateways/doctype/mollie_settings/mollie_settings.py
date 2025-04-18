@@ -136,17 +136,25 @@ class MollieSettings(Document):
 					"redirect_to": self.data.get("redirect_to"),
 				}
 			redirect_url = self.get_payment_url(**data_details)
-		
-			charge = mollie_client.payments.create(
-            		{
-				'amount': {
-        				'currency': self.data.currency,
-        				'value': "{:.2f}".format(float(self.data.amount))
-    				},
-                		"description": self.data.description,
-				'redirectUrl': redirect_url,
-            			}
-        		)
+			email = frappe.db.get_value(self.data.reference_doctype, self.data.reference_docname, 'email')
+			if email:
+				self.data.payer_email = email
+
+			charge_data = {
+                'amount': {
+                    'currency': self.data.currency,
+                    'value': "{:.2f}".format(float(self.data.amount))
+                },
+                "description": self.data.description,
+                'redirectUrl': redirect_url,
+            }
+
+			if self.data.payer_email and not self.data.payer_email == "Guest":
+				charge_data['billingAddress'] = {
+					'email': self.data.payer_email
+				}
+
+			charge = mollie_client.payments.create(charge_data)
 
 			frappe.db.set_value(self.data.reference_doctype, self.data.reference_docname, 'payment_id', charge.id)
 		
