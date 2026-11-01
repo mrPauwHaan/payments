@@ -179,3 +179,11 @@ override_whitelisted_methods = {
 # Recommended only for DocTypes which have limited documents with untranslated names
 # For example: Role, Gender, etc.
 # translated_search_doctypes = []
+
+# API & Webhook Processing
+# ------------------------
+# Exempt specific webhook endpoints from CSRF validation
+
+before_request = [
+    "payments.payment_gateways.doctype.mollie_settings.mollie_settings.exempt_webhook_csrf"
+]
