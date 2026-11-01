@@ -65,7 +65,10 @@ import json
 from urllib.parse import urlencode
 
 import frappe
-import razorpay
+try:
+    import razorpay
+except Exception:
+    razorpay = None
 from frappe import _
 from frappe.integrations.utils import (
 	create_request_log,
