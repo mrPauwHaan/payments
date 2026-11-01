@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 from urllib.parse import urlencode
 
 import frappe
@@ -83,7 +85,9 @@ class MollieSettings(Document):
 
 	def get_payment_url(self, **kwargs) -> str:
 		response = self.create_request(kwargs)
-		return response.get("redirect_to")
+		if response.get("status") == "Failed":
+			return response.get("redirect_to")
+		return response.get("payment_url") or response.get("redirect_to")
 
 	def create_request(self, data: dict) -> dict:
 		self.data = frappe._dict(data)
@@ -92,9 +96,22 @@ class MollieSettings(Document):
 		try:
 			self._validate_reference_document()
 
-			existing_url = self._get_reusable_checkout_url()
-			if existing_url:
-				return {"redirect_to": existing_url, "status": "Pending"}
+			public_pay_url = get_public_payment_url(
+				self.data.reference_doctype,
+				self.data.reference_docname,
+				gateway_controller=self.name,
+				redirect_to=self.data.get("redirect_to"),
+			)
+
+			if self._is_reference_document_already_paid():
+				self.flags.status_changed_to = "Completed"
+				finalized = self.finalize_request(run_hook=False)
+				finalized["payment_url"] = public_pay_url
+				return finalized
+
+			existing = self._get_reusable_checkout_session(public_pay_url)
+			if existing:
+				return existing
 
 			self.integration_request = create_request_log(
 				self.data,
@@ -102,7 +119,7 @@ class MollieSettings(Document):
 				reference_doctype=self.data.reference_doctype,
 				reference_docname=self.data.reference_docname,
 			)
-			return self.create_charge_on_mollie()
+			return self.create_charge_on_mollie(public_pay_url=public_pay_url)
 
 		except Exception:
 			frappe.log_error(title="Mollie Create Request Error", message=frappe.get_traceback())
@@ -171,7 +188,37 @@ class MollieSettings(Document):
 
 		self.validate_transaction_currency(self.data.currency)
 
-	def _get_reusable_checkout_url(self) -> str | None:
+	def _is_reference_document_already_paid(self) -> bool:
+		doctype = self.data.get("reference_doctype")
+		docname = self.data.get("reference_docname")
+		if not doctype or not docname or not frappe.db.exists(doctype, docname):
+			return False
+
+		ref_doc = frappe.get_doc(doctype, docname)
+		meta = ref_doc.meta
+
+		if meta.has_field("paid") and int(ref_doc.get("paid") or 0) == 1:
+			return True
+		if meta.has_field("status") and str(ref_doc.get("status") or "").lower() == "paid":
+			return True
+		if meta.has_field("payment_status") and str(ref_doc.get("payment_status") or "").lower() in (
+			"completed",
+			"paid",
+		):
+			return True
+
+		completed_ir = frappe.db.exists(
+			"Integration Request",
+			{
+				"integration_request_service": "Mollie",
+				"reference_doctype": doctype,
+				"reference_docname": docname,
+				"status": "Completed",
+			},
+		)
+		return bool(completed_ir)
+
+	def _get_reusable_checkout_session(self, public_pay_url: str) -> dict | None:
 		existing_requests = frappe.get_all(
 			"Integration Request",
 			filters={
@@ -197,6 +244,9 @@ class MollieSettings(Document):
 
 			try:
 				payment = client.payments.get(payment_id)
+				ir_doc = frappe.get_doc("Integration Request", req.name)
+				ir_doc.db_set("output", frappe.as_json(dict(payment)), update_modified=False)
+
 				payment_amount = flt(payment.amount.get("value"))
 				payment_currency = payment.amount.get("currency")
 
@@ -206,17 +256,28 @@ class MollieSettings(Document):
 					and abs(payment_amount - flt(self.data.amount)) < 0.01
 					and payment_currency == self.data.currency
 				):
-					return payment.checkout_url
-
-				if payment.is_paid():
-					ir_doc = frappe.get_doc("Integration Request", req.name)
-					result = self.process_payment_status(ir_doc, payment=payment)
-					return get_url(result.get("redirect_to"))
-
-				if payment.is_canceled() or payment.is_expired() or payment.is_failed():
-					frappe.db.set_value(
-						"Integration Request", req.name, "status", "Cancelled", update_modified=True
+					self._sync_reference_doc(
+						status="Open",
+						payment_id=payment.id,
+						payment_url=public_pay_url,
+						force_active=True,
 					)
+					return {
+						"redirect_to": payment.checkout_url,
+						"payment_url": public_pay_url,
+						"payment_id": payment.id,
+						"status": "Open",
+					}
+
+				if payment.is_paid() or payment.is_pending() or payment.is_authorized():
+					result = self.process_payment_status(ir_doc, payment=payment)
+					result["redirect_to"] = get_url(result.get("redirect_to"))
+					result["payment_url"] = public_pay_url
+					return result
+
+				# Payment is canceled, expired, or failed: sync terminal status before creating a fresh session
+				self.process_payment_status(ir_doc, payment=payment)
+
 			except Exception:
 				frappe.log_error(
 					title="Mollie Session Reuse Check Failed",
@@ -225,8 +286,16 @@ class MollieSettings(Document):
 
 		return None
 
-	def create_charge_on_mollie(self) -> dict:
+	def create_charge_on_mollie(self, public_pay_url: str | None = None) -> dict:
 		client = self.get_client()
+
+		if not public_pay_url:
+			public_pay_url = get_public_payment_url(
+				self.data.reference_doctype,
+				self.data.reference_docname,
+				gateway_controller=self.name,
+				redirect_to=self.data.get("redirect_to"),
+			)
 
 		return_url = get_url(
 			"api/method/payments.payment_gateways.doctype.mollie_settings.mollie_settings.payment_return?"
@@ -262,9 +331,19 @@ class MollieSettings(Document):
 		self.integration_request.db_set("request_description", charge.id, update_modified=False)
 		self.integration_request.db_set("output", frappe.as_json(dict(charge)), update_modified=True)
 
+		# Immediately record the Open status, new payment_id, and persistent public retry URL on the document
+		self._sync_reference_doc(
+			status="Open",
+			payment_id=charge.id,
+			payment_url=public_pay_url,
+			force_active=True,
+		)
+
 		return {
 			"redirect_to": charge.checkout_url,
-			"status": "Pending",
+			"payment_url": public_pay_url,
+			"payment_id": charge.id,
+			"status": "Open",
 		}
 
 	def process_payment_status(self, integration_request_doc, payment=None) -> dict:
@@ -273,15 +352,21 @@ class MollieSettings(Document):
 			(integration_request_doc.name,),
 		)
 		integration_request_doc.reload()
+		self.integration_request = integration_request_doc
 
 		self.data = frappe._dict(frappe.parse_json(integration_request_doc.data or "{}"))
-		payment_id = integration_request_doc.request_description
+		if not self.data.get("reference_doctype"):
+			self.data.reference_doctype = integration_request_doc.reference_doctype
+		if not self.data.get("reference_docname"):
+			self.data.reference_docname = integration_request_doc.reference_docname
 
+		payment_id = integration_request_doc.request_description
 		if not payment_id or not str(payment_id).startswith("tr_"):
 			frappe.throw(_("Missing or invalid Mollie payment ID on Integration Request."))
 
 		if integration_request_doc.status == "Completed":
 			self.flags.status_changed_to = "Completed"
+			self._sync_reference_doc(status="Completed", payment_id=payment_id)
 			return self.finalize_request(run_hook=False)
 
 		if not payment:
@@ -303,6 +388,7 @@ class MollieSettings(Document):
 				update_modified=False,
 			)
 			self.flags.status_changed_to = "Failed"
+			self._sync_reference_doc(status="Failed", payment_id=payment_id)
 			return self.finalize_request(run_hook=False)
 
 		if payment.is_paid():
@@ -310,54 +396,167 @@ class MollieSettings(Document):
 			integration_request_doc.db_set("status", "Completed", update_modified=True)
 			return self.finalize_request(run_hook=True)
 
-		if payment.is_pending() or payment.is_authorized():
-			self.flags.status_changed_to = "Pending"
+		if payment.is_authorized():
+			self.flags.status_changed_to = "Authorized"
 			integration_request_doc.db_set("status", "Authorized", update_modified=True)
+			return self.finalize_request(run_hook=False)
+
+		if payment.is_pending():
+			self.flags.status_changed_to = "Pending"
+			integration_request_doc.db_set("status", "Queued", update_modified=True)
 			return self.finalize_request(run_hook=False)
 
 		if payment.is_open():
 			self.flags.status_changed_to = "Open"
+			integration_request_doc.db_set("status", "Queued", update_modified=True)
+			return self.finalize_request(run_hook=False, checkout_url=payment.checkout_url)
+
+		if payment.is_expired():
+			self.flags.status_changed_to = "Expired"
+			integration_request_doc.db_set("status", "Cancelled", update_modified=True)
 			return self.finalize_request(run_hook=False)
 
-		self.flags.status_changed_to = "Cancelled"
-		final_ir_status = "Cancelled" if (payment.is_canceled() or payment.is_expired()) else "Failed"
-		integration_request_doc.db_set("status", final_ir_status, update_modified=True)
+		if payment.is_canceled():
+			self.flags.status_changed_to = "Cancelled"
+			integration_request_doc.db_set("status", "Cancelled", update_modified=True)
+			return self.finalize_request(run_hook=False)
+
+		self.flags.status_changed_to = "Failed"
+		integration_request_doc.db_set("status", "Failed", update_modified=True)
 		return self.finalize_request(run_hook=False)
 
-	def finalize_request(self, run_hook: bool = False) -> dict:
+	def _sync_reference_doc(
+		self,
+		status: str,
+		payment_id: str | None = None,
+		payment_url: str | None = None,
+		force_active: bool = False,
+	):
+		doctype = self.data.get("reference_doctype")
+		docname = self.data.get("reference_docname")
+
+		if not doctype or not docname or not frappe.db.exists(doctype, docname):
+			return
+
+		ref_doc = frappe.get_doc(doctype, docname)
+		meta = ref_doc.meta
+
+		if not payment_id and getattr(self, "integration_request", None):
+			payment_id = self.integration_request.request_description
+
+		if not payment_url:
+			payment_url = get_public_payment_url(
+				doctype,
+				docname,
+				gateway_controller=self.name,
+				redirect_to=self.data.get("redirect_to"),
+			)
+
+		current_payment_status = str(ref_doc.get("payment_status") or "").lower() if meta.has_field("payment_status") else ""
+		current_payment_id = ref_doc.get("payment_id") if meta.has_field("payment_id") else None
+		is_already_paid = (
+			current_payment_status in ("completed", "paid")
+			or (meta.has_field("paid") and int(ref_doc.get("paid") or 0) == 1)
+			or (meta.has_field("status") and str(ref_doc.get("status") or "").lower() == "paid")
+		)
+
+		# Do not allow late webhooks from an older payment attempt to downgrade a Completed document
+		if is_already_paid and status != "Completed":
+			return
+
+		# Do not allow a terminal webhook (Expired/Cancelled/Failed) for an older payment_id
+		# to overwrite a newer active payment_id already stored on the document
+		if (
+			not force_active
+			and status in ("Expired", "Cancelled", "Failed")
+			and current_payment_id
+			and payment_id
+			and current_payment_id != payment_id
+		):
+			return
+
+		if meta.has_field("payment_status"):
+			resolved_status = self._resolve_select_field_option(meta.get_field("payment_status"), status)
+			ref_doc.db_set("payment_status", resolved_status, update_modified=True)
+
+		if meta.has_field("payment_id") and payment_id:
+			ref_doc.db_set("payment_id", payment_id, update_modified=False)
+
+		if meta.has_field("payment_url") and payment_url:
+			ref_doc.db_set("payment_url", payment_url, update_modified=False)
+
+		if status == "Completed" and meta.has_field("paid"):
+			ref_doc.db_set("paid", 1, update_modified=False)
+
+	@staticmethod
+	def _resolve_select_field_option(df, target_status: str) -> str:
+		if not df or df.fieldtype != "Select" or not df.options:
+			return target_status
+
+		options = [opt.strip() for opt in df.options.split("\n") if opt.strip()]
+		if not options:
+			return target_status
+
+		synonyms = {
+			"Completed": ["Completed", "Paid", "Success", "Succeeded"],
+			"Open": ["Open", "Created", "Initiated", "Unpaid", "Pending"],
+			"Pending": ["Pending", "Processing", "Open"],
+			"Authorized": ["Authorized", "Authorised", "Pending"],
+			"Expired": ["Expired", "Timed Out", "Cancelled", "Canceled"],
+			"Cancelled": ["Cancelled", "Canceled"],
+			"Failed": ["Failed", "Declined", "Error"],
+		}
+
+		candidates = synonyms.get(target_status, [target_status])
+		lower_map = {opt.lower(): opt for opt in options}
+
+		for candidate in candidates:
+			if candidate.lower() in lower_map:
+				return lower_map[candidate.lower()]
+
+		return target_status
+
+	def finalize_request(self, run_hook: bool = False, checkout_url: str | None = None) -> dict:
 		redirect_to = self.data.get("redirect_to") or None
 		redirect_message = self.data.get("redirect_message") or None
 		doctype = self.data.get("reference_doctype")
 		docname = self.data.get("reference_docname")
+		status = self.flags.status_changed_to or "Failed"
+
+		payment_id = (
+			self.integration_request.request_description
+			if getattr(self, "integration_request", None)
+			else None
+		)
+		public_pay_url = (
+			get_public_payment_url(doctype, docname, gateway_controller=self.name, redirect_to=redirect_to)
+			if (doctype and docname)
+			else None
+		)
+
+		self._sync_reference_doc(
+			status=status,
+			payment_id=payment_id,
+			payment_url=public_pay_url,
+		)
 
 		ref_doc = None
 		if doctype and docname and frappe.db.exists(doctype, docname):
 			ref_doc = frappe.get_doc(doctype, docname)
 			ref_doc.flags.ignore_permissions = True
 
-		if self.flags.status_changed_to == "Completed":
+		if status == "Completed":
 			if run_hook and ref_doc:
-				if hasattr(ref_doc, "on_payment_authorized") and callable(
-					getattr(ref_doc, "on_payment_authorized")
-				):
-					try:
-						if ref_doc.get("status") != "Paid":
-							custom_redirect_to = ref_doc.run_method(
-								"on_payment_authorized", self.flags.status_changed_to
-							)
-							if custom_redirect_to:
-								redirect_to = custom_redirect_to
-					except Exception:
-						frappe.log_error(
-							title="Mollie on_payment_authorized Error",
-							message=frappe.get_traceback(),
-						)
-
-				if ref_doc.meta.has_field("payment_status"):
-					ref_doc.db_set("payment_status", "Completed")
-
-				if ref_doc.meta.has_field("payment_id") and getattr(self, "integration_request", None):
-					ref_doc.db_set("payment_id", self.integration_request.request_description)
+				try:
+					if ref_doc.get("status") != "Paid":
+						custom_redirect_to = ref_doc.run_method("on_payment_authorized", status)
+						if custom_redirect_to:
+							redirect_to = custom_redirect_to
+				except Exception:
+					frappe.log_error(
+						title="Mollie on_payment_authorized Error",
+						message=frappe.get_traceback(),
+					)
 
 			if self.redirect_url:
 				redirect_url = self.redirect_url
@@ -365,22 +564,25 @@ class MollieSettings(Document):
 			else:
 				redirect_url = f"payment-success?{urlencode({'doctype': doctype, 'docname': docname})}"
 
-		elif self.flags.status_changed_to == "Pending":
-			if ref_doc and ref_doc.meta.has_field("payment_status"):
-				ref_doc.db_set("payment_status", "Pending")
-
+		elif status in ("Pending", "Authorized"):
 			redirect_url = f"payment-success?{urlencode({'doctype': doctype, 'docname': docname})}"
 
 		else:
-			if ref_doc and ref_doc.meta.has_field("payment_status"):
-				ref_doc.db_set("payment_status", self.flags.status_changed_to or "Failed")
+			retry_url = self._build_cancel_or_retry_redirect(
+				doctype=doctype,
+				docname=docname,
+				status=status,
+				public_pay_url=public_pay_url,
+				fallback_redirect=redirect_to,
+				checkout_url=checkout_url,
+			)
+			return {
+				"redirect_to": retry_url,
+				"payment_url": public_pay_url,
+				"status": status,
+			}
 
-			retry_base = self._get_retry_document_url(doctype, docname, redirect_to)
-			separator = "&" if "?" in retry_base else "?"
-			redirect_url = f"{retry_base}{separator}{urlencode({'payment_status': (self.flags.status_changed_to or 'failed').lower()})}"
-			return {"redirect_to": redirect_url, "status": self.flags.status_changed_to}
-
-		if redirect_to:
+		if redirect_to and redirect_to != "None":
 			separator = "&" if "?" in redirect_url else "?"
 			redirect_url += f"{separator}{urlencode({'redirect_to': redirect_to})}"
 
@@ -388,30 +590,164 @@ class MollieSettings(Document):
 			separator = "&" if "?" in redirect_url else "?"
 			redirect_url += f"{separator}{urlencode({'redirect_message': redirect_message})}"
 
-		return {"redirect_to": redirect_url, "status": self.flags.status_changed_to}
+		return {
+			"redirect_to": redirect_url,
+			"payment_url": public_pay_url,
+			"status": status,
+		}
 
-	@staticmethod
-	def _get_retry_document_url(doctype: str | None, docname: str | None, fallback_redirect: str | None) -> str:
+	def _build_cancel_or_retry_redirect(
+		self,
+		doctype: str | None,
+		docname: str | None,
+		status: str,
+		public_pay_url: str | None,
+		fallback_redirect: str | None,
+		checkout_url: str | None = None,
+	) -> str:
 		if fallback_redirect and fallback_redirect != "None":
-			return fallback_redirect
+			separator = "&" if "?" in fallback_redirect else "?"
+			params = {"payment_status": status.lower()}
+			if public_pay_url:
+				params["retry_url"] = public_pay_url
+			return f"{fallback_redirect}{separator}{urlencode(params)}"
 
-		if not doctype or not docname or not frappe.db.exists(doctype, docname):
-			return "payment-failed"
+		if doctype == "Payment Request" and docname:
+			return f"/payment-request?{urlencode({'name': docname, 'payment_status': status.lower()})}"
 
-		web_form = frappe.db.get_value("Web Form", {"doc_type": doctype}, "route")
-		if web_form:
-			return f"/{web_form}?name={docname}"
+		# For Guests and Web Form records, render a safe status screen with a one-click Retry button
+		# pointing to the HMAC-signed public `pay` endpoint so they can retry without logging in
+		if public_pay_url:
+			status_titles = {
+				"Cancelled": _("Payment Cancelled"),
+				"Expired": _("Payment Session Expired"),
+				"Failed": _("Payment Failed"),
+				"Open": _("Payment Incomplete"),
+			}
+			status_descriptions = {
+				"Cancelled": _("Your payment was cancelled. Your registration has been saved—you can complete the payment at any time using the button below."),
+				"Expired": _("Your payment session expired before completion. Click below to start a new payment session for your existing record."),
+				"Failed": _("Your payment could not be processed. Click below to try again with a new payment session."),
+				"Open": _("Your payment has not been completed yet. Click below to continue to the payment screen."),
+			}
+			action_url = checkout_url if (status == "Open" and checkout_url) else public_pay_url
+			title = status_titles.get(status, _("Payment Incomplete"))
+			desc = status_descriptions.get(status, _("Click below to retry your payment."))
 
-		if doctype == "Payment Request":
-			return f"/payment-request?{urlencode({'name': docname})}"
-
-		meta = frappe.get_meta(doctype)
-		if meta.has_field("route"):
-			route = frappe.db.get_value(doctype, docname, "route")
-			if route:
-				return f"/{route}"
+			html = (
+				f"<p>{desc}</p>"
+				f"<p class='mt-4'>"
+				f"<a href='{frappe.utils.escape_html(action_url)}' class='btn btn-primary'>"
+				f"{_('Retry Payment')}"
+				f"</a></p>"
+			)
+			return frappe.redirect_to_message(title, html, indicator_color="orange" if status != "Failed" else "red")
 
 		return "payment-failed"
+
+
+def _get_hmac_secret() -> bytes:
+	secret = (
+		frappe.local.conf.get("encryption_key")
+		or frappe.get_site_config().get("encryption_key")
+		or frappe.local.site
+	)
+	return str(secret).encode("utf-8")
+
+
+def generate_payment_token(
+	reference_doctype: str,
+	reference_docname: str,
+	gateway_controller: str | None = None,
+) -> str:
+	controller = gateway_controller or get_gateway_controller(reference_doctype, reference_docname)
+	msg = f"{reference_doctype}:{reference_docname}:{controller}".encode("utf-8")
+	return hmac.new(_get_hmac_secret(), msg, hashlib.sha256).hexdigest()
+
+
+def verify_payment_token(
+	reference_doctype: str,
+	reference_docname: str,
+	token: str,
+	gateway_controller: str | None = None,
+) -> bool:
+	if not token or not isinstance(token, str):
+		return False
+	expected = generate_payment_token(reference_doctype, reference_docname, gateway_controller)
+	return hmac.compare_digest(expected, token)
+
+
+@frappe.whitelist()
+def get_public_payment_url(
+	reference_doctype: str,
+	reference_docname: str,
+	gateway_controller: str | None = None,
+	redirect_to: str | None = None,
+) -> str:
+	controller = gateway_controller or get_gateway_controller(reference_doctype, reference_docname)
+	token = generate_payment_token(reference_doctype, reference_docname, controller)
+	params = {
+		"doctype": reference_doctype,
+		"docname": reference_docname,
+		"controller": controller,
+		"token": token,
+	}
+	if redirect_to and redirect_to != "None":
+		params["redirect_to"] = redirect_to
+
+	return get_url(
+		"api/method/payments.payment_gateways.doctype.mollie_settings.mollie_settings.pay?"
+		+ urlencode(params)
+	)
+
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def pay(
+	doctype: str | None = None,
+	docname: str | None = None,
+	token: str | None = None,
+	controller: str | None = None,
+	redirect_to: str | None = None,
+	**kwargs,
+):
+	doctype = doctype or frappe.form_dict.get("doctype")
+	docname = docname or frappe.form_dict.get("docname")
+	token = token or frappe.form_dict.get("token")
+	controller = controller or frappe.form_dict.get("controller")
+	redirect_to = redirect_to or frappe.form_dict.get("redirect_to")
+
+	if not doctype or not docname or not token:
+		frappe.local.response["type"] = "redirect"
+		frappe.local.response["location"] = get_url("payment-failed")
+		return
+
+	try:
+		resolved_controller = controller or get_gateway_controller(doctype, docname)
+		if not verify_payment_token(doctype, docname, token, resolved_controller):
+			frappe.throw(_("Invalid or expired payment link signature."), frappe.PermissionError)
+
+		if not frappe.db.exists(doctype, docname):
+			frappe.throw(_("Payment reference record does not exist."), frappe.DoesNotExistError)
+
+		settings_doc = frappe.get_doc("Mollie Settings", resolved_controller)
+		result = settings_doc.create_request(
+			{
+				"reference_doctype": doctype,
+				"reference_docname": docname,
+				"redirect_to": redirect_to,
+			}
+		)
+		# Explicit commit is required because Frappe does not auto-commit on HTTP GET requests
+		frappe.db.commit()
+		target_url = get_url(result.get("redirect_to") or "payment-failed")
+
+	except Exception:
+		frappe.db.rollback()
+		frappe.log_error(title="Mollie Public Pay Endpoint Error", message=frappe.get_traceback())
+		target_url = get_url("payment-failed")
+
+	frappe.local.response["type"] = "redirect"
+	frappe.local.response["location"] = target_url
 
 
 def get_gateway_controller(doctype: str, docname: str) -> str:
@@ -421,16 +757,25 @@ def get_gateway_controller(doctype: str, docname: str) -> str:
 	meta = frappe.get_meta(doctype)
 	payment_gateway = None
 
-	if meta.has_field("payment_gateway"):
+	if meta.has_field("payment_gateway") and frappe.db.exists(doctype, docname):
 		payment_gateway = frappe.db.get_value(doctype, docname, "payment_gateway")
 
 	if not payment_gateway:
+		payment_gateway = frappe.db.get_value(
+			"Web Form", {"doc_type": doctype, "accept_payment": 1}, "payment_gateway"
+		)
+
+	if not payment_gateway:
 		payment_gateway = (
-			frappe.db.get_value("Payment Gateway", {"gateway_controller": "Mollie Settings"}, "name")
+			frappe.db.get_value("Payment Gateway", {"gateway_settings": "Mollie Settings"}, "name")
+			or frappe.db.get_value("Payment Gateway", {"gateway_controller": "Mollie Settings"}, "name")
 			or "Mollie"
 		)
 
 	gateway_controller = frappe.db.get_value("Payment Gateway", payment_gateway, "gateway_controller")
+	if not gateway_controller:
+		gateway_controller = frappe.db.get_value("Mollie Settings", {}, "name")
+
 	if not gateway_controller:
 		frappe.throw(_("No Gateway Controller configured for Payment Gateway {0}.").format(payment_gateway))
 
@@ -528,9 +873,12 @@ def payment_return(integration_request: str | None = None, **kwargs):
 		controller_name = _resolve_controller_for_integration_request(ir_doc)
 		settings_doc = frappe.get_doc("Mollie Settings", controller_name)
 		result = settings_doc.process_payment_status(ir_doc)
+		# Explicit commit is required because Frappe does not auto-commit on HTTP GET requests
+		frappe.db.commit()
 		target_url = get_url(result.get("redirect_to") or "payment-failed")
 
 	except Exception:
+		frappe.db.rollback()
 		frappe.log_error(title="Mollie Payment Return Error", message=frappe.get_traceback())
 		target_url = get_url("payment-failed")
 
